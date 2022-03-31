@@ -1,0 +1,118 @@
+class QDChapterInfo {
+    constructor(g_data, data = undefined) {
+        this._g_data = g_data;
+        this._data = data || {};
+        this._real_words = undefined;
+    }
+    /**@returns {boolean}*/
+    isPublication() {
+        return this._g_data["isPublication"];
+    }
+    /**@returns {number}*/
+    bookId() {
+        return this._g_data["bookInfo"]["bookId"] || this._g_data["pageJson"]["bookId"];
+    }
+    /**@returns {string}*/
+    bookName() {
+        return this._g_data["bookInfo"]["bookName"];
+    }
+    /**@returns {number}*/
+    authorId() {
+        return this._g_data["bookInfo"]["authorId"];
+    }
+    /**@returns {string}*/
+    authorName() {
+        return this._g_data["bookInfo"]["authorName"];
+    }
+    /**@returns {number}*/
+    chapterId() {
+        return this._g_data["chapter"]["id"];
+    }
+    /**@returns {number}*/
+    vipStatus() {
+        return this._g_data["chapter"]["vipStatus"];
+    }
+    /**@returns {number}*/
+    prevChapterId() {
+        return this._g_data["chapter"]["prevId"];
+    }
+    /**@returns {number}*/
+    nextChapterId() {
+        return this._g_data["chapter"]["nextId"];
+    }
+    /**@returns {number}*/
+    isBuy() {
+        return this._g_data["chapter"]["isBuy"];
+    }
+    /**@returns {number}*/
+    isContentEncode() {
+        return this._g_data["isContentEncode"];
+    }
+    /**@returns {number}*/
+    banId() {
+        return this._g_data["riskInfo"]["banId"];
+    }
+    /**@returns {boolean}*/
+    isBanned() {
+        return !!this.banId();
+    }
+    /**@returns {number} 下个章节是否为VIP章节*/
+    nextChapterVip() {
+        return this._g_data["nextChapterVip"];
+    }
+    /**@returns {number}*/
+    isVipBook() {
+        return this._g_data["pageJson"]["isVip"];
+    }
+    /**@returns {boolean} 是否为出版物*/
+    isPublicationBook() {
+        return this._g_data["pageJson"]["isPublication"];
+    }
+    /**@returns {number}*/
+    isLogin() {
+        return this._g_data["pageJson"]["isLogin"];
+    }
+    /**@returns {number} 是否已签约*/
+    isSignBook() {
+        return this._g_data["pageJson"]["isSign"];
+    }
+    /**@returns {string} 签约状态*/
+    signStatus() {
+        return this._g_data["pageJson"]["signStatus"];
+    }
+    /**@returns {number} 用于区分起点中文网(1)和女生网*/
+    isWebSiteType() {
+        return this._g_data["isWebSiteType"];
+    }
+    webSiteType() {
+        return this.isWebSiteType() == 1 ? "起点中文网" : "起点女生网";
+    }
+    /**@returns {number}*/
+    chapterName() {
+        return this._data["name"];
+    }
+    /**@returns {Array<string>}*/
+    contents() {
+        return this._data["contents"];
+    }
+    /**@returns {number}*/
+    words() {
+        return this._data["words"];
+    }
+    /**@returns {string}*/
+    uploadTime() {
+        return this._data["uploadTime"];
+    }
+    /**@returns {number}*/
+    realWords() {
+        if (this._real_words === undefined) {
+            this._real_words = 0;
+            this.contents().forEach((v) => {
+                this._real_words += v.trim().length;
+            });
+        }
+        return this._real_words;
+    }
+}
+
+module.exports = { QDChapterInfo };

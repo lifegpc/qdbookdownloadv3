@@ -1,0 +1,10 @@
+{
+    "ExtName": { "message": "EBook downloader" },
+    "Desc": { "message": "A downloader to download ebook from websites." },
+    "siteName": { "message": "Website name: " },
+    "chapterName": { "message": "Chatper name: " },
+    "wordCount": { "message": "Word count: " },
+    "uploadTime": { "message": "Upload time: " },
+    "previewChapter": { "message": "Preview chapter: " },
+    "chapterId": { "message": "Chapter id: " }
+}

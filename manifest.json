@@ -1,0 +1,44 @@
+{
+    "manifest_version": 3,
+    "name": "__MSG_ExtName__",
+    "author": "lifegpc",
+    "description": "__MSG_Desc__",
+    "version": "1.0.0",
+    "default_locale": "en",
+    "icons": {
+        "16": "ico/16.png",
+        "48": "ico/48.png",
+        "128": "ico/128.png"
+    },
+    "action": {
+        "default_icon": {
+            "19": "ico/19.png",
+            "38": "ico/38.png"
+        },
+        "default_title": "__MSG_ExtName__",
+        "default_popup": "popup.html"
+    },
+    "host_permissions": [
+        "https://*.qidian.com/",
+        "http://*.qidian.com/"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://*.qidian.com/chapter/*",
+                "http://*.qidian.com/chapter/*"
+            ],
+            "js": [
+                "js/qdchapter.js"
+            ]
+        }
+    ],
+    "permissions": [
+        "tabs"
+    ],
+    "sandbox": {
+        "pages": [
+            "sandbox.html"
+        ]
+    }
+}

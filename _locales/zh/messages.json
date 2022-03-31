@@ -1,0 +1,10 @@
+{
+    "ExtName": { "message": "电子书下载器" },
+    "Desc": { "message": "一个可以从网站下载电子书的下载器" },
+    "siteName": { "message": "站点名称：" },
+    "chapterName": { "message": "章节名称：" },
+    "wordCount": { "message": "字数：" },
+    "uploadTime": { "message": "上传时间：" },
+    "previewChapter": { "message": "章节预览：" },
+    "chapterId": { "message": "章节ID：" }
+}
