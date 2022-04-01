@@ -1,3 +1,6 @@
 compiler.jar
 js/
 node_modules/
+.vscode/
+_*.js
+*.wasm

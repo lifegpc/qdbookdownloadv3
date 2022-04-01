@@ -6,5 +6,17 @@
     "wordCount": { "message": "字数：" },
     "uploadTime": { "message": "上传时间：" },
     "previewChapter": { "message": "章节预览：" },
-    "chapterId": { "message": "章节ID：" }
+    "chapterId": { "message": "章节ID：" },
+    "vipStatus": { "message": "VIP状态：" },
+    "paid": { "message": "付费内容" },
+    "free": { "message": "免费内容" },
+    "autoBuy": { "message": "自动订阅：" },
+    "enabled": { "message": "已启用" },
+    "disabled": { "message": "已禁用" },
+    "qidian": { "message": "起点中文网" },
+    "qidianwomen": { "message": "起点女生网" },
+    "bookName": { "message": "书名：" },
+    "bookId": { "message": "书籍ID：" },
+    "authorName": { "message": "作者名：" },
+    "authorId": { "message": "作者ID：" }
 }

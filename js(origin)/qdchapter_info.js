@@ -1,8 +1,14 @@
+const { getI18n } = require('./i18n');
+
 class QDChapterInfo {
     constructor(g_data, data = undefined) {
         this._g_data = g_data;
         this._data = data || {};
         this._real_words = undefined;
+    }
+    /**@returns {number}*/
+    autoBuy() {
+        return this._g_data['readSetting']['autoBuy'];
     }
     /**@returns {boolean}*/
     isPublication() {
@@ -85,7 +91,7 @@ class QDChapterInfo {
         return this._g_data["isWebSiteType"];
     }
     webSiteType() {
-        return this.isWebSiteType() == 1 ? "起点中文网" : "起点女生网";
+        return this.isWebSiteType() == 1 ? getI18n('qidian') : getI18n('qidianwomen');
     }
     /**@returns {number}*/
     chapterName() {

@@ -6,5 +6,29 @@
     "wordCount": { "message": "Word count: " },
     "uploadTime": { "message": "Upload time: " },
     "previewChapter": { "message": "Preview chapter: " },
-    "chapterId": { "message": "Chapter id: " }
+    "chapterId": { "message": "Chapter id: " },
+    "vipStatus": {
+        "message": "VIP status:",
+        "description": "The content is paid content or free content (on qidian website)"
+    },
+    "paid": { "message": "Paid content" },
+    "free": { "message": "Free content" },
+    "autoBuy": {
+        "message": "Auto buy:",
+        "description": "Buy next chapter automatically. (A settings on qidian website)"
+    },
+    "enabled": { "message": "enabled" },
+    "disabled": { "message": "disabled" },
+    "qidian": {
+        "message": "Qidian",
+        "description": "A website's name. Chinese only. https://www.qidian.com"
+    },
+    "qidianwomen": {
+        "message": "Qidian Women",
+        "description": "A website's name. Chinese only. https://www.qdmm.com"
+    },
+    "bookName": { "message": "Book name: " },
+    "bookId": { "message": "Book id: " },
+    "authorName": { "message": "Author name: " },
+    "authorId": { "message": "Author id: " }
 }
