@@ -4,6 +4,7 @@ const { eval_gdata } = require('./eval');
 const match_urls = require('./match_urls');
 const { QDChapterInfo } = require('./qdchapter_info');
 const { getI18n } = require('./i18n');
+const { saveBlob } = require('./save_file');
 
 /**
  * @param {QDChapterInfo} data Chapter info
@@ -33,6 +34,32 @@ function generate_book_info(data, doc = document) {
     d.append(`${getI18n('authorName')}${data.authorName()}`);
     d.append(doc.createElement('br'));
     d.append(`${getI18n('authorId')}${data.authorId()}`);
+    if (data.prevChapterId() > -1) {
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('prevChapterId')}${data.prevChapterId()}`);
+    }
+    if (data.nextChapterId() > -1) {
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('nextChapterId')}${data.nextChapterId()}`);
+    }
+    d.append(doc.createElement('br'));
+    function genText() {
+        return `${data.chapterName()}\n${getI18n('wordCount')}${data.words()}(${data.realWords()})\n${getI18n('uploadTime')}${data.uploadTime()}\n${data.contents().join('\n')}`;
+    }
+    let copyAsTxt = doc.createElement('button');
+    copyAsTxt.innerText = getI18n('copyAsTxt');
+    copyAsTxt.addEventListener('click', () => {
+        navigator.clipboard.writeText(genText()).catch(() => {
+            alert(getI18n('copyFailed'));
+        })
+    })
+    d.append(copyAsTxt);
+    let saveAsTxt = doc.createElement('button');
+    saveAsTxt.innerText = getI18n('saveAsTxt');
+    saveAsTxt.addEventListener('click', () => {
+        saveBlob(new Blob([genText()], { type: 'text/plain;charset=utf-8' }), `${data.bookName()}-${data.chapterName()}.txt`);
+    })
+    d.append(saveAsTxt);
     return d;
 }
 

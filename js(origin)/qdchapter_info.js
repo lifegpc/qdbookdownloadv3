@@ -1,4 +1,5 @@
 const { getI18n } = require('./i18n');
+const { structuredClone } = require('./clone');
 
 class QDChapterInfo {
     constructor(g_data, data = undefined) {
@@ -118,6 +119,12 @@ class QDChapterInfo {
             });
         }
         return this._real_words;
+    }
+    toJson() {
+        return structuredClone({'g_data': this._g_data, 'data': this._data});
+    }
+    static fromJson(json) {
+        return new QDChapterInfo(json['g_data'], json['data']);
     }
 }
 

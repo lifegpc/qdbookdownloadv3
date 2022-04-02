@@ -30,5 +30,10 @@
     "bookName": { "message": "Book name: " },
     "bookId": { "message": "Book id: " },
     "authorName": { "message": "Author name: " },
-    "authorId": { "message": "Author id: " }
+    "authorId": { "message": "Author id: " },
+    "prevChapterId": { "message": "Previous chapter's id: " },
+    "nextChapterId": { "message": "Next chapter's id: " },
+    "copyAsTxt": { "message": "Copy chapter content to the clipboard" },
+    "copyFailed": { "message": "Failed to copy content to the clipboard" },
+    "saveAsTxt": { "message": "Save as a txt file" }
 }

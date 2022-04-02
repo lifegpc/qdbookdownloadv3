@@ -39,6 +39,8 @@ function tcompress(bytes, level) {
     if (ptr == null) {
         throw new Error('No enough memory.');
     }
+    HEAPU32 = zlib['HEAPU32'];
+    HEAPU8 = zlib['HEAPU8'];
     HEAPU32[ptr >> 2] = 0;
     let len_ptr = ptr + 4;
     HEAPU32[len_ptr >> 2] = 0;
@@ -47,8 +49,12 @@ function tcompress(bytes, level) {
         free(ptr);
         throw new Error('No enough memory.');
     }
+    HEAPU32 = zlib['HEAPU32'];
+    HEAPU8 = zlib['HEAPU8'];
     HEAPU8.set(bytes, source_ptr);
     let re = level == undefined ? zlib['_comp'](ptr, len_ptr, source_ptr, bytes.length) : zlib['_comp2'](ptr, len_ptr, source_ptr, bytes.length, level);
+    HEAPU32 = zlib['HEAPU32'];
+    HEAPU8 = zlib['HEAPU8'];
     if (!re) {
         free(source_ptr);
         let arr = new Uint8Array(HEAPU32[len_ptr >> 2]);

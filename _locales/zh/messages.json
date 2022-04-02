@@ -18,5 +18,10 @@
     "bookName": { "message": "书名：" },
     "bookId": { "message": "书籍ID：" },
     "authorName": { "message": "作者名：" },
-    "authorId": { "message": "作者ID：" }
+    "authorId": { "message": "作者ID：" },
+    "prevChapterId": { "message": "上一章节ID：" },
+    "nextChapterId": { "message": "下一章节ID：" },
+    "copyAsTxt": { "message": "复制章节内容" },
+    "copyFailed": { "message": "无法将数据写入剪贴板" },
+    "saveAsTxt": { "message": "保存为TXT文件" }
 }
