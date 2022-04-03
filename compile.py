@@ -13,7 +13,7 @@ def ph():
 
 
 def gopt(args: List[str]):
-    re = getopt(args, 'h?ucj:dt:W:o:', ['help', 'chrome', 'firefox'])
+    re = getopt(args, 'h?ucj:dt:W:o:s', ['help', 'chrome', 'firefox', 'include', 'source_map_include_content'])  # noqa: E501
     rr = re[0]
     r = {}
     h = False
@@ -26,9 +26,12 @@ def gopt(args: List[str]):
             r['c'] = True
         if i[0] == '-j' and 'j' not in r:
             r['j'] = i[1]
-        if i[0] == '-d' and 'd' not in r:
-            r['d'] = True
-        if i[0] == '-t' and exists(f"js(origin)/{i[1]}"):
+        if i[0] == '-d':
+            if 'd' in r:
+                r['dd'] = True
+            else:
+                r['d'] = True
+        if i[0] == '-t' and exists(f"js_origin/{i[1]}"):
             if 't' not in r:
                 r['t'] = []
             r['t'].append(i[1])
@@ -38,6 +41,8 @@ def gopt(args: List[str]):
             r['W'].append(i[1])
         if i[0] == '-o':
             r['o'] = i[1]
+        if i[0] == '-s' or i[0] == '--source_map_include_content':
+            r['s'] = True
     if h:
         ph()
         exit()
@@ -51,6 +56,8 @@ class main:
     _debug: bool = False
     _t: List[str] = None
     _W: List[str] = None
+    _source_map_include_content: bool = False
+    _ddebug: bool = False
 
     def __init__(self, ip: dict, fl: List[str]):
         if 'u' in ip:
@@ -63,23 +70,27 @@ class main:
             self._chrome = ip['ch']
         if 'd' in ip:
             self._debug = ip['d']
+        if 'dd' in ip:
+            self._ddebug = True
         if 't' in ip:
             self._t = ip['t']
         if 'W' in ip:
             self._W = ip['W']
+        if 's' in ip:
+            self._source_map_include_content = True
         self._o = None
         if 'o' in ip:
             self._o = ip['o']
-        if not exists('js(origin)/'):
-            raise FileNotFoundError('js(origin)/')
+        if not exists('js_origin/'):
+            raise FileNotFoundError('js_origin/')
         if len(fl) == 0 and self._t is None:
-            fl = listdir('js(origin)/')
+            fl = listdir('js_origin/')
         if not self._check_java():
             raise FileNotFoundError('Can not find java.')
         if not exists('compiler.jar'):
             raise FileNotFoundError('compiler.jar')
         for fn in fl:
-            fn2 = f'js(origin)/{fn}'
+            fn2 = f'js_origin/{fn}'
             if not exists(fn2):
                 raise FileNotFoundError(fn2)
         self._com_javascript(fl)
@@ -97,7 +108,7 @@ class main:
         print('INFO: compiler')
         jsf = ''
         for fn in fl:
-            jsf += f' --js "js(origin)/{fn}"'
+            jsf += f' --js "js_origin/{fn}"'
         if self._t is not None:
             for fn in self._t:
                 data = self.getPackageInfo(fn)
@@ -117,6 +128,10 @@ class main:
         if self._o is not None and self._o != '':
             fn = self._o
         dcm = f' --create_source_map "js/{fn}.map"' if self._debug else ""
+        if self._debug and self._source_map_include_content:
+            dcm += " --source_map_include_content"
+        if self._ddebug:
+            dcm += " --debug"
         cml = f'{self._java} -jar compiler.jar{jsf} --compilation_level ADVANCED_OPTIMIZATIONS{nod} --js_output_file "js/{fn}"{dcm}'  # noqa E501
         print(cml)
         if system(cml) != 0:
@@ -125,7 +140,7 @@ class main:
     def getPackageInfo(self, fn: str):
         p = Popen(['node', '--preserve-symlinks',
                    'node_modules/closure-calculate-chunks/cli.js',
-                   '--entrypoint', f'./js(origin)/{fn}'], stdout=PIPE)
+                   '--entrypoint', f'./js_origin/{fn}'], stdout=PIPE)
         p.wait()
         return p.stdout.read() if p.stdout is not None else ''
 
