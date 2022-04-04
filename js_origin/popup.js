@@ -5,11 +5,13 @@ const match_urls = require('./match_urls');
 const { QDChapterInfo } = require('./qdchapter_info');
 const { getI18n } = require('./i18n');
 const { saveBlob } = require('./save_file');
+const { get_settings, Settings } = require('./settings');
 
 /**
  * @param {QDChapterInfo} data Chapter info
+ * @param {Settings} settings Settings
  */
-function generate_book_info(data, doc = document) {
+function generate_book_info(data, settings, doc = document) {
     let d = doc.createElement('div');
     d.append(`${getI18n('siteName')}${data.webSiteType()}`);
     d.append(doc.createElement('br'));
@@ -60,13 +62,20 @@ function generate_book_info(data, doc = document) {
         saveBlob(new Blob([genText()], { type: 'text/plain;charset=utf-8' }), `${data.bookName()}-${data.chapterName()}.txt`);
     })
     d.append(saveAsTxt);
+    let saveAsXhtml = doc.createElement('button');
+    saveAsXhtml.innerText = getI18n('saveAsXhtml');
+    saveAsXhtml.addEventListener('click', () => {
+        saveBlob(data.toXhtml(settings).to_blob(), `${data.bookName()}-${data.chapterName()}.xhtml`);
+    })
+    d.append(saveAsXhtml);
     return d;
 }
 
 /**
  * @param {number} tabId Tab id
+ * @param {Settings} settings Settings
  */
-async function load_qd_book_info(tabId) {
+async function load_qd_book_info(tabId, settings) {
     let g_data = await getQdChapterGdata(tabId);
     if (!g_data['ok']) {
         throw new Error(g_data['msg']);
@@ -78,17 +87,23 @@ async function load_qd_book_info(tabId) {
         throw new Error(data['code']);
     }
     let qdc = new QDChapterInfo(g_data, data['data']);
-    document.getElementById('main').append(generate_book_info(qdc));
+    document.getElementById('main').append(generate_book_info(qdc, settings));
+}
+
+async function basic_handle() {
+    let settings = await get_settings();
+    let tab = await getCurrentTab();
+    let tabId = tab['id'];
+    let url = tab['url'];
+    document.getElementById('main').style.width = tab['width'] / 2;
+    let re = match_urls.match_url(url);
+    if (re == match_urls.QD_CHAPTER) {
+        await load_qd_book_info(tabId, settings);
+    }
 }
 
 window.addEventListener('load', () => {
-    getCurrentTab().then((tab) => {
-        let tabId = tab['id'];
-        let url = tab['url'];
-        document.getElementById('main').style.width = tab['width'] / 2;
-        let re = match_urls.match_url(url);
-        if (re == match_urls.QD_CHAPTER) {
-            load_qd_book_info(tabId);
-        }
-    });
+    basic_handle().catch(e => {
+        console.error(e);
+    })
 })

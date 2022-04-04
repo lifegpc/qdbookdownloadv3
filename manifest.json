@@ -34,11 +34,13 @@
         }
     ],
     "permissions": [
+        "storage",
         "tabs"
     ],
     "sandbox": {
         "pages": [
             "sandbox.html"
         ]
-    }
+    },
+    "options_page": "options.html"
 }

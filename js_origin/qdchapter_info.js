@@ -1,5 +1,7 @@
 const { getI18n } = require('./i18n');
 const { structuredClone } = require('./clone');
+const { XHtml } = require('./epub/xhtml')
+const { Settings } = require('./settings')
 
 class QDChapterInfo {
     constructor(g_data, data = undefined) {
@@ -94,7 +96,7 @@ class QDChapterInfo {
     webSiteType() {
         return this.isWebSiteType() == 1 ? getI18n('qidian') : getI18n('qidianwomen');
     }
-    /**@returns {number}*/
+    /**@returns {string}*/
     chapterName() {
         return this._data["name"];
     }
@@ -125,6 +127,25 @@ class QDChapterInfo {
     }
     static fromJson(json) {
         return new QDChapterInfo(json['g_data'], json['data']);
+    }
+    /**
+     * Convert to XHTML
+     * @param {Settings} settings Settings
+     */
+    toXhtml(settings) {
+        let x = new XHtml(settings);
+        let title = x.doc.createElement('title');
+        title.innerText = this.chapterName();
+        x.doc.head.append(title);
+        let h1 = x.doc.createElement('h1');
+        h1.innerText = this.chapterName();
+        x.doc.body.append(h1);
+        this.contents().forEach((p) => {
+            let pd = x.doc.createElement('p');
+            pd.innerText = p;
+            x.doc.body.append(pd);
+        })
+        return x;
     }
 }
 

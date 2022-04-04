@@ -35,5 +35,12 @@
     "nextChapterId": { "message": "Next chapter's id: " },
     "copyAsTxt": { "message": "Copy chapter content to the clipboard" },
     "copyFailed": { "message": "Failed to copy content to the clipboard" },
-    "saveAsTxt": { "message": "Save as a txt file" }
+    "saveAsTxt": { "message": "Save as a txt file" },
+    "settings_page": { "message": "Options" },
+    "strip_in_xhtml_file": { "message": "Remove unneeded spaces in paragraph when exporting as XHTML file" },
+    "save": { "message": "Save" },
+    "settings_saved": { "message": "Settings saved." },
+    "reload_settings": { "message": "Reload settings" },
+    "reset_settings": { "message": "Reset settings" },
+    "saveAsXhtml": { "message": "Save as a XHTML file" }
 }

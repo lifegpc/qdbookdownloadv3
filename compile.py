@@ -105,7 +105,6 @@ class main:
         return False
 
     def _com_javascript(self, fl: List[str]):
-        print('INFO: compiler')
         jsf = ''
         for fn in fl:
             jsf += f' --js "js_origin/{fn}"'
@@ -133,6 +132,7 @@ class main:
         if self._ddebug:
             dcm += " --debug"
         cml = f'{self._java} -jar compiler.jar{jsf} --compilation_level ADVANCED_OPTIMIZATIONS{nod} --js_output_file "js/{fn}"{dcm}'  # noqa E501
+        print(f'INFO: compile {fn}')
         print(cml)
         if system(cml) != 0:
             raise Exception('Error in compiler.')
