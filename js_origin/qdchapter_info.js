@@ -139,6 +139,7 @@ class QDChapterInfo {
         x.doc.head.append(title);
         let h1 = x.doc.createElement('h1');
         h1.innerText = this.chapterName();
+        x.doc.documentElement.setAttribute('xml:lang', 'zh-Hans-CN');
         x.doc.body.append(h1);
         this.contents().forEach((p) => {
             let pd = x.doc.createElement('p');

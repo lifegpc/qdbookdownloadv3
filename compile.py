@@ -13,7 +13,7 @@ def ph():
 
 
 def gopt(args: List[str]):
-    re = getopt(args, 'h?ucj:dt:W:o:s', ['help', 'chrome', 'firefox', 'include', 'source_map_include_content'])  # noqa: E501
+    re = getopt(args, 'h?ucj:dt:W:o:sa', ['help', 'chrome', 'firefox', 'include', 'source_map_include_content', 'add_source_map_url'])  # noqa: E501
     rr = re[0]
     r = {}
     h = False
@@ -43,6 +43,8 @@ def gopt(args: List[str]):
             r['o'] = i[1]
         if i[0] == '-s' or i[0] == '--source_map_include_content':
             r['s'] = True
+        if i[0] == '-a' or i[0] == '--add_source_map_url':
+            r['a'] = True
     if h:
         ph()
         exit()
@@ -58,6 +60,7 @@ class main:
     _W: List[str] = None
     _source_map_include_content: bool = False
     _ddebug: bool = False
+    _add_source_map_url: bool = False
 
     def __init__(self, ip: dict, fl: List[str]):
         if 'u' in ip:
@@ -81,6 +84,8 @@ class main:
         self._o = None
         if 'o' in ip:
             self._o = ip['o']
+        if 'a' in ip:
+            self._add_source_map_url = True
         if not exists('js_origin/'):
             raise FileNotFoundError('js_origin/')
         if len(fl) == 0 and self._t is None:
@@ -129,6 +134,10 @@ class main:
         dcm = f' --create_source_map "js/{fn}.map"' if self._debug else ""
         if self._debug and self._source_map_include_content:
             dcm += " --source_map_include_content"
+        elif self._debug:
+            dcm += " \"--source_map_location_mapping=js_origin|../js_origin\""
+        if self._debug and self._add_source_map_url:
+            dcm += f" \"--output_wrapper=%output%//# sourceMappingURL={fn}.map\""
         if self._ddebug:
             dcm += " --debug"
         cml = f'{self._java} -jar compiler.jar{jsf} --compilation_level ADVANCED_OPTIMIZATIONS{nod} --js_output_file "js/{fn}"{dcm}'  # noqa E501
