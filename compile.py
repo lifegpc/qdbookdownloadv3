@@ -1,11 +1,40 @@
 from getopt import getopt
 import sys
 from typing import List
-from os.path import exists, relpath, abspath
-from os import listdir, system
+from os.path import exists, relpath, abspath, getmtime
+from os import listdir, system, makedirs
 from platform import system as systemname
 from subprocess import Popen, PIPE
-from json import loads
+from json import loads, dump, load
+
+
+class FileCache:
+    def __init__(self):
+        self._obj = {}
+        if exists('.compile-cache/cache.json'):
+            with open('.compile-cache/cache.json', 'r', encoding='UTF-8') as f:
+                self._obj = load(f)
+
+    def add_file(self, f: str):
+        obj = {'mtime': getmtime(f)}
+        self._obj[f] = obj
+
+    def is_newer(self, f: str):
+        if f not in self._obj:
+            self.add_file(f)
+            return True
+        obj = self._obj[f]
+        nobj = {'mtime': getmtime(f)}
+        if obj['mtime'] == nobj['mtime']:
+            return False
+        else:
+            self.add_file(f)
+            return True
+
+    def __del__(self):
+        makedirs('.compile-cache', exist_ok=True)
+        with open('.compile-cache/cache.json', 'w', encoding='UTF-8') as f:
+            dump(self._obj, f, ensure_ascii=False, separators=(',', ':'))
 
 
 def ph():
@@ -13,7 +42,7 @@ def ph():
 
 
 def gopt(args: List[str]):
-    re = getopt(args, 'h?ucj:dt:W:o:sa', ['help', 'chrome', 'firefox', 'include', 'source_map_include_content', 'add_source_map_url'])  # noqa: E501
+    re = getopt(args, 'h?ucj:dt:W:o:saf', ['help', 'chrome', 'firefox', 'include', 'source_map_include_content', 'add_source_map_url', 'force_build'])  # noqa: E501
     rr = re[0]
     r = {}
     h = False
@@ -45,6 +74,8 @@ def gopt(args: List[str]):
             r['s'] = True
         if i[0] == '-a' or i[0] == '--add_source_map_url':
             r['a'] = True
+        if i[0] == '-f' or i[0] == '--force_build':
+            r['f'] = True
     if h:
         ph()
         exit()
@@ -61,6 +92,7 @@ class main:
     _source_map_include_content: bool = False
     _ddebug: bool = False
     _add_source_map_url: bool = False
+    _force_build: bool = False
 
     def __init__(self, ip: dict, fl: List[str]):
         if 'u' in ip:
@@ -81,6 +113,8 @@ class main:
             self._W = ip['W']
         if 's' in ip:
             self._source_map_include_content = True
+        if 'f' in ip:
+            self._force_build = True
         self._o = None
         if 'o' in ip:
             self._o = ip['o']
@@ -94,6 +128,7 @@ class main:
             raise FileNotFoundError('Can not find java.')
         if not exists('compiler.jar'):
             raise FileNotFoundError('compiler.jar')
+        self._cache = FileCache()
         for fn in fl:
             fn2 = f'js_origin/{fn}'
             if not exists(fn2):
@@ -111,8 +146,11 @@ class main:
 
     def _com_javascript(self, fl: List[str]):
         jsf = ''
+        need_build = self._force_build
         for fn in fl:
             jsf += f' --js "js_origin/{fn}"'
+            if self._cache.is_newer(f"js_origin/{fn}"):
+                need_build = True
         if self._t is not None:
             for fn in self._t:
                 data = self.getPackageInfo(fn)
@@ -124,13 +162,20 @@ class main:
                         t: list = obj['js']
                     n = abspath(".")
                     for f in t:
-                        jsf += f' --js "{relpath(f, n)}"'
+                        f = relpath(f, n)
+                        jsf += f' --js "{f}"'
+                        if self._cache.is_newer(f):
+                            need_build = True
+        if self._o is not None and self._o != '':
+            fn = self._o
+        if not need_build and exists(f"js/{fn}"):
+            if not self._debug or (self._debug and exists(f"js/{fn}.map")):
+                print(f'INFO: skip compile {fn}')
+                return
         if self._W is not None:
             for w in self._W:
                 jsf += f' "--jscomp_off={w}"'
         nod = ' --module_resolution NODE --process_common_js_modules' if self._t else ''  # noqa: E501
-        if self._o is not None and self._o != '':
-            fn = self._o
         dcm = f' --create_source_map "js/{fn}.map"' if self._debug else ""
         if self._debug and self._source_map_include_content:
             dcm += " --source_map_include_content"
