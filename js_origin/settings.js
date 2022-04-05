@@ -206,6 +206,13 @@ class Settings {
     set strip_in_xhtml_file(value) {
         return this._set_bool("strip_in_xhtml_file", value);
     }
+    /**Add more informations to Xhtml.*/
+    get add_more_info_to_xhtml() {
+        return this._get_bool("add_more_info_to_xhtml") || false;
+    }
+    set add_more_info_to_xhtml(value) {
+        return this._set_bool("add_more_info_to_xhtml", value);
+    }
     /**@type {string}*/
     get version() {
         return this._data["version"];

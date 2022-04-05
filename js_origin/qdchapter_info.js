@@ -141,6 +141,13 @@ class QDChapterInfo {
         h1.innerText = this.chapterName();
         x.doc.documentElement.setAttribute('xml:lang', 'zh-Hans-CN');
         x.doc.body.append(h1);
+        if (settings.add_more_info_to_xhtml) {
+            let p = x.doc.createElement('p');
+            p.innerText = `${getI18n('wordCount')}${this.words()}(${this.realWords()})`;
+            p.append(x.doc.createElement('br'));
+            p.append(`${getI18n('uploadTime')}${this.uploadTime()}`);
+            x.doc.body.append(p);
+        }
         this.contents().forEach((p) => {
             let pd = x.doc.createElement('p');
             pd.innerText = p;

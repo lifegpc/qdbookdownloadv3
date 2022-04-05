@@ -42,5 +42,6 @@
     "settings_saved": { "message": "Settings saved." },
     "reload_settings": { "message": "Reload settings" },
     "reset_settings": { "message": "Reset settings" },
-    "saveAsXhtml": { "message": "Save as a XHTML file" }
+    "saveAsXhtml": { "message": "Save as a XHTML file" },
+    "add_more_info_to_xhtml": { "message": "Add more informations to XHtml file." }
 }

@@ -16,6 +16,7 @@ async function main_handle() {
     /**@type {Array<BoolTemplate>}*/
     let bool_buttons = [];
     bool_buttons.push(new BoolTemplate('strip_in_xhtml_file', getI18n('strip_in_xhtml_file'), '', settings, false));
+    bool_buttons.push(new BoolTemplate('add_more_info_to_xhtml', getI18n('add_more_info_to_xhtml'), '', settings, false));
     let save = document.getElementById('save');
     save.innerText = getI18n('save');
     save.addEventListener('click', () => {

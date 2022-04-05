@@ -30,5 +30,6 @@
     "settings_saved": { "message": "已保存设置。" },
     "reload_settings": { "message": "重新加载设置" },
     "reset_settings": { "message": "重置设置" },
-    "saveAsXhtml": { "message": "保存为XHTML文件" }
+    "saveAsXhtml": { "message": "保存为XHTML文件" },
+    "add_more_info_to_xhtml": { "message": "将更多信息写入XHTML文件" }
 }

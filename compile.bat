@@ -1,7 +1,8 @@
 @ECHO OFF
 SETLOCAL ENABLEDELAYEDEXPANSION
 set py=python
-set pyt=%py% -m compile -W *
+set pyt=%py% compile.py -W *
+set RUN_AS_MODULE=0
 set DEBUG=0
 set SOURCE_MAP_INCLUDE_CONTENT=0
 set ADD_SOURCE_MAP_URL=0
@@ -14,7 +15,9 @@ for %%i IN (%*) DO (
     IF %%~i == -s SET SOURCE_MAP_INCLUDE_CONTENT=1
     IF %%~i == -a SET ADD_SOURCE_MAP_URL=1
     IF %%~i == -f SET FORCE_BUILD=1
+    IF %%~i == -m SET RUN_AS_MODULE=1
 )
+IF %RUN_AS_MODULE% == 1 SET pyt=%py% -m compile -W *
 IF %DEBUG% == 1 SET "pyt=%pyt% -d"
 IF %DEBUG% == 2 SET "pyt=%pyt% -dd"
 IF %SOURCE_MAP_INCLUDE_CONTENT% == 1 SET "pyt=%pyt% -s"
