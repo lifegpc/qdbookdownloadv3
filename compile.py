@@ -1,7 +1,7 @@
 from getopt import getopt
 import sys
 from typing import List
-from os.path import exists, relpath, abspath, getmtime
+from os.path import exists, relpath, abspath, getmtime, dirname
 from os import listdir, system, makedirs
 from platform import system as systemname
 from subprocess import Popen, PIPE
@@ -9,10 +9,11 @@ from json import loads, dump, load
 
 
 class FileCache:
-    def __init__(self):
+    def __init__(self, f: str):
         self._obj = {}
-        if exists('.compile-cache/cache.json'):
-            with open('.compile-cache/cache.json', 'r', encoding='UTF-8') as f:
+        self._f = f
+        if exists(f'.compile-cache/{f}.json'):
+            with open(f'.compile-cache/{f}.json', 'r', encoding='UTF-8') as f:
                 self._obj = load(f)
 
     def add_file(self, f: str):
@@ -32,8 +33,9 @@ class FileCache:
             return True
 
     def __del__(self):
-        makedirs('.compile-cache', exist_ok=True)
-        with open('.compile-cache/cache.json', 'w', encoding='UTF-8') as f:
+        fn = f'.compile-cache/{self._f}.json'
+        makedirs(dirname(fn), exist_ok=True)
+        with open(fn, 'w', encoding='UTF-8') as f:
             dump(self._obj, f, ensure_ascii=False, separators=(',', ':'))
 
 
@@ -128,7 +130,7 @@ class main:
             raise FileNotFoundError('Can not find java.')
         if not exists('compiler.jar'):
             raise FileNotFoundError('compiler.jar')
-        self._cache = FileCache()
+        self._cache = FileCache(self.get_fn(fl))
         for fn in fl:
             fn2 = f'js_origin/{fn}'
             if not exists(fn2):
@@ -190,6 +192,13 @@ class main:
         print(cml)
         if system(cml) != 0:
             raise Exception('Error in compiler.')
+
+    def get_fn(self, fl: List[str]):
+        if self._o is not None and self._o != '':
+            return self._o
+        if self._t is not None and len(self._t) > 0:
+            return self._t[-1]
+        return fl[-1]
 
     def getPackageInfo(self, fn: str):
         p = Popen(['node', '--preserve-symlinks',
