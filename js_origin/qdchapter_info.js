@@ -2,6 +2,7 @@ const { getI18n } = require('./i18n');
 const { structuredClone } = require('./clone');
 const { XHtml } = require('./epub/xhtml')
 const { Settings } = require('./settings')
+const { hash: md5 } = require('./hash/md5');
 
 class QDChapterInfo {
     constructor(g_data, data = undefined) {
@@ -121,6 +122,10 @@ class QDChapterInfo {
             });
         }
         return this._real_words;
+    }
+    get_hash() {
+        let s = `${this.bookId()}\n${this.bookName()}\n${this.authorId()}\n${this.authorName()}\n${this.chapterId()}\n${this.vipStatus()}\n${this.isBuy()}\n${this.uploadTime()}\n${this.chapterName()}\n${this.contents().join('\n')}`;
+        return md5(new TextEncoder().encode(s));
     }
     toJson() {
         return structuredClone({'g_data': this._g_data, 'data': this._data});

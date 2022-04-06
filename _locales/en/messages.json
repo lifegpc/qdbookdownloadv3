@@ -43,5 +43,7 @@
     "reload_settings": { "message": "Reload settings" },
     "reset_settings": { "message": "Reset settings" },
     "saveAsXhtml": { "message": "Save as a XHTML file" },
-    "add_more_info_to_xhtml": { "message": "Add more informations to XHtml file." }
+    "add_more_info_to_xhtml": { "message": "Add more informations to XHtml file." },
+    "saveToDatabase": { "message": "Save to database" },
+    "save_ok": { "message": "Saved successfully." }
 }

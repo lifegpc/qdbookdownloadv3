@@ -6,6 +6,7 @@ const { QDChapterInfo } = require('./qdchapter_info');
 const { getI18n } = require('./i18n');
 const { saveBlob } = require('./save_file');
 const { get_settings, Settings } = require('./settings');
+const indexeddb_qd = require('./db/indexeddb/qd');
 
 /**
  * @param {QDChapterInfo} data Chapter info
@@ -68,6 +69,12 @@ function generate_book_info(data, settings, doc = document) {
         saveBlob(data.toXhtml(settings).to_blob(), `${data.bookName()}-${data.chapterName()}.xhtml`);
     })
     d.append(saveAsXhtml);
+    let saveToDatabase = doc.createElement('button');
+    saveToDatabase.innerText = getI18n('saveToDatabase');
+    saveToDatabase.addEventListener('click', () => {
+        indexeddb_qd.save_chapter(data).then(() => { alert(getI18n('save_ok')) }).catch(e => { console.error(e); });
+    })
+    d.append(saveToDatabase);
     return d;
 }
 
