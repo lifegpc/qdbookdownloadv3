@@ -59,7 +59,7 @@ class BoolTemplate {
             this._settings._set_bool(this._name, value);
         }
     }
-    reload() {
+    _reload() {
         this._select.value = this._get_value() ? 'true' : 'false';
     }
 }

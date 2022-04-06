@@ -20,7 +20,7 @@ async function main_handle() {
     let save = document.getElementById('save');
     save.innerText = getI18n('save');
     save.addEventListener('click', () => {
-        settings.save().then(() => {
+        settings._save().then(() => {
             alert(getI18n('settings_saved'));
         }).catch(e => {
             console.error(e);
@@ -30,9 +30,9 @@ async function main_handle() {
     let reload = document.getElementById('reload');
     reload.innerText = getI18n('reload_settings');
     async function reload_settings() {
-        await settings.reload();
+        await settings._reload();
         bool_buttons.forEach(b => {
-            b.reload();
+            b._reload();
         })
     }
     reload.addEventListener('click', () => {

@@ -121,7 +121,7 @@ class Settings {
                 }
                 console.log(`${item} was changed from ${oldValue} to ${newValue}`);
             }
-            this.validate().then(() => { console.log(this._data); });
+            this._validate().then(() => { console.log(this._data); });
         }
     }
     _check_data() {
@@ -181,18 +181,18 @@ class Settings {
         }
         this._need_save = this._need_save || (origin != this._data[key]);
     }
-    async validate() {
+    async _validate() {
         this._check_data();
-        if (this._need_save) await this.save();
+        if (this._need_save) await this._save();
     }
-    async reload() {
+    async _reload() {
         let sync = browser["storage"][this._area];
         let data = await sync["get"]();
         this._data = data;
         this._need_save = false;
-        await this.validate();
+        await this._validate();
     }
-    async save() {
+    async _save() {
         this._is_saving = true;
         let sync = browser["storage"][this._area];
         let re = await sync["set"](this._data);
@@ -229,7 +229,7 @@ async function get_settings() {
     let sync = browser["storage"]["sync"];
     let data = await sync["get"]();
     let s = new Settings(data);
-    await s.validate();
+    await s._validate();
     return s;
 }
 
