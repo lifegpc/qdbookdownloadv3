@@ -7,6 +7,7 @@ const { getI18n } = require('./i18n');
 const { saveBlob } = require('./save_file');
 const { get_settings, Settings } = require('./settings');
 const indexeddb_qd = require('./db/indexeddb/qd');
+const { u8arrcmp } = require('./binary');
 
 /**
  * @param {QDChapterInfo} data Chapter info
@@ -71,8 +72,24 @@ function generate_book_info(data, settings, doc = document) {
     d.append(saveAsXhtml);
     let saveToDatabase = doc.createElement('button');
     saveToDatabase.innerText = getI18n('saveToDatabase');
-    saveToDatabase.addEventListener('click', () => {
+    function save_to_database() {
         indexeddb_qd.save_chapter(data).then(() => { alert(getI18n('save_ok')) }).catch(e => { console.error(e); });
+    }
+    saveToDatabase.addEventListener('click', () => {
+        indexeddb_qd.get_latest_chapters_key_by_chapterId(data.chapterId()).then(key => {
+            console.log('Latest key:', key);
+            if (key) {
+                indexeddb_qd.get_chatper(key).then(chapter => {
+                    console.log('Latest chapter:', chapter);
+                    let confirmed = !u8arrcmp(chapter.get_hash(), data.get_hash()) || confirm(`${getI18n('chapter_already_exists_in_db')}${getI18n('ask_continue')}`);
+                    if (confirmed) {
+                        save_to_database();
+                    }
+                })
+            } else {
+                save_to_database();
+            }
+        })
     })
     d.append(saveToDatabase);
     return d;
@@ -94,6 +111,7 @@ async function load_qd_book_info(tabId, settings) {
         throw new Error(data['code']);
     }
     let qdc = new QDChapterInfo(g_data, data['data']);
+    console.log('Current chapter:', qdc);
     document.getElementById('main').append(generate_book_info(qdc, settings));
 }
 

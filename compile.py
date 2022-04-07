@@ -12,6 +12,7 @@ class FileCache:
     def __init__(self, f: str):
         self._obj = {}
         self._f = f
+        self.have_err = False
         if exists(f'.compile-cache/{f}.json'):
             with open(f'.compile-cache/{f}.json', 'r', encoding='UTF-8') as f:
                 self._obj = load(f)
@@ -33,10 +34,11 @@ class FileCache:
             return True
 
     def __del__(self):
-        fn = f'.compile-cache/{self._f}.json'
-        makedirs(dirname(fn), exist_ok=True)
-        with open(fn, 'w', encoding='UTF-8') as f:
-            dump(self._obj, f, ensure_ascii=False, separators=(',', ':'))
+        if not self.have_err:
+            fn = f'.compile-cache/{self._f}.json'
+            makedirs(dirname(fn), exist_ok=True)
+            with open(fn, 'w', encoding='UTF-8') as f:
+                dump(self._obj, f, ensure_ascii=False, separators=(',', ':'))
 
 
 def ph():
@@ -191,6 +193,7 @@ class main:
         print(f'INFO: compile {fn}')
         print(cml)
         if system(cml) != 0:
+            self._cache.have_err = True
             raise Exception('Error in compiler.')
 
     def get_fn(self, fl: List[str]):

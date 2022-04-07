@@ -58,4 +58,59 @@ function quick_compress(data, level) {
     })
 }
 
-module.exports = { getQdChapter, getQdChapterGdata, quick_compress };
+/**
+ * @param {Uint8Array | {"data": Uint8Array, "length": number}} data Compressed data. If data is Uint8Array, the length will be used.
+ * @param {number} length The length of uncompressed data.
+ * @returns {Promise<Uint8Array>}
+ */
+function quick_uncompress(data, length) {
+    if (data.constructor !== Uint8Array) {
+        length = data['length'];
+        data = data['data'];
+    }
+    /**@type {HTMLIFrameElement} */
+    let sandbox = document.getElementById('sandbox');
+    let rand = Math.random();
+    sandbox.contentWindow.postMessage({'@type': 'quick_uncompress', 'data': data, 'length': length, 'rand': rand}, "*");
+    return new Promise((resolve, reject) => {
+        /**
+         * @param {MessageEvent} ev
+         */
+        let listener = (ev) => {
+            let data = ev.data;
+            if (data['@type'] == 'quick_uncompress_result') {
+                if (rand == data['rand']) {
+                    window.removeEventListener('message', listener);
+                    let ok = data['ok'];
+                    if (ok) {
+                        resolve(data['data']);
+                    } else {
+                        reject(data['error']);
+                    }
+                    ev.stopImmediatePropagation();
+                }
+            }
+        }
+        window.addEventListener('message', listener);
+    })
+}
+
+/**
+ * @param {Uint8Array | {"data": Uint8Array, "length": number}} data Compressed data. If data is Uint8Array, the length will be used.
+ * @param {number} length The length of uncompressed data.
+ * @param {string} encoding Encoding.
+ * @returns 
+ */
+async function quick_uncompress_with_decode(data, length, encoding) {
+    let s = await quick_uncompress(data, length);
+    let decoder = new TextDecoder(encoding);
+    return decoder.decode(s);
+}
+
+module.exports = {
+    getQdChapter,
+    getQdChapterGdata,
+    quick_compress,
+    quick_uncompress,
+    quick_uncompress_with_decode,
+};

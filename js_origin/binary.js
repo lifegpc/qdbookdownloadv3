@@ -48,4 +48,13 @@ function writeUint32LE(value, out = new Uint8Array(4), offset = 0) {
     return out;
 }
 
-module.exports = { arrayBufferToHex, readUint32LE, writeUint32LE };
+/**
+ * Compare two arraies
+ * @param {Uint8Array} arr1 
+ * @param {Uint8Array} arr2 
+ */
+function u8arrcmp(arr1, arr2) {
+    return arr1.length == arr2.length && arr1.every((v, i) => v === arr2[i]);
+}
+
+module.exports = { arrayBufferToHex, readUint32LE, writeUint32LE, u8arrcmp };

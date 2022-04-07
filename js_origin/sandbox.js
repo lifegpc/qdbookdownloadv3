@@ -19,5 +19,16 @@ window.addEventListener('message', (ev) => {
             re['error'] = e;
             source.postMessage(re, '*');
         })
+    } else if (data['@type'] == 'quick_uncompress') {
+        let bytes = data['data'];
+        let re = {'@type': 'quick_uncompress_result', 'ok': true, 'rand': data['rand']};
+        compress.uncompress(bytes, data['length']).then((e) => {
+            re['data'] = e;
+            source.postMessage(re, '*');
+        }).catch((e) => {
+            re['ok'] = false;
+            re['error'] = e;
+            source.postMessage(re, '*');
+        })
     }
 })
