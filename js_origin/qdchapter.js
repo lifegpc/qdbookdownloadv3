@@ -35,7 +35,15 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
         if (document.getElementsByClassName('error-text fl').length) {
             re['code'] |= 1;
         } else {
-            let cols = document.getElementsByClassName('content-wrap');
+            let ocols = document.getElementsByClassName('content-wrap');
+            /**@type {Array<HTMLElement>} */
+            let cols = [];
+            for (let i = 0; i < ocols.length; i++) {
+                let p = ocols[i].parentElement;
+                if (p.getAttribute("data-type") == "2") {
+                    cols.push(ocols[i]);
+                }
+            }
             if (cols.length) {
                 data['name'] = cols[0].innerHTML;
             } else {
