@@ -5,10 +5,36 @@ const { browser } = require('./const');
  * @param g_data Global data
  * @returns {Promise<any>} data
  */
-function getQdChapter(tabId, g_data) {
+function _getQdChapter(tabId, g_data) {
     /**@type {Promise<any>} data*/
     let p = browser['tabs']['sendMessage'](tabId, {'@type': 'get_qdchapter', 'g_data': g_data});
     return p;
+}
+
+/**
+ * @param {number} tabId Tab id
+ * @param g_data Global data
+ * @returns {Promise<any>} data
+ */
+function getQdChapter(tabId, g_data) {
+    return new Promise((resolve, reject) => {
+        function a() {
+            _getQdChapter(tabId, g_data).then(data => {
+                let code = data['code'];
+                if (code == 0) {
+                    resolve(data);
+                } else if (code == 2) {
+                    console.log('Retry after 0.1 sencond.')
+                    setTimeout(a, 100);
+                } else {
+                    reject(data['code']);
+                }
+            }).catch(error => {
+                reject(error);
+            });
+        }
+        a();
+    })
 }
 
 /**
