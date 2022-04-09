@@ -47,5 +47,6 @@
     "saveToDatabase": { "message": "Save to database" },
     "save_ok": { "message": "Saved successfully." },
     "chapter_already_exists_in_db": { "message": "Chapter already exists in the database." },
-    "ask_continue": { "message": "Do you want to continue?" }
+    "ask_continue": { "message": "Do you want to continue?" },
+    "manage_title": { "message": "Manage books" }
 }

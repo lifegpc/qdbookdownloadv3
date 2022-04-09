@@ -45,6 +45,89 @@ function init() {
 }
 
 /**
+ * @template T
+ * @param {string} name
+ * @param {IDBValidKey | IDBKeyRange} key
+ * @param {T} data
+ * @returns {Promise<T>}
+ */
+function delete_idb_data(name, key, data) {
+    return new Promise((resolve, reject) => {
+        init().then(() => {
+            let tx = db.transaction([name], 'readwrite');
+            let store = tx.objectStore(name);
+            let req = store.delete(key);
+            req.onsuccess = () => {
+                resolve(data);
+            }
+            req.onerror = () => {
+                need_reinit = true;
+                reject(req.error);
+            }
+        }).catch(reject)
+    })
+}
+
+/**
+ * Delete chapter(s)
+ * @param {number|[number, number, Date]|Array<[number, number, Date]>} key Primary key(s). If key is number, it is chapterId.
+ * @return {Promise<any>}
+ */
+function delete_chapter(key) {
+    return new Promise((resolve, reject) => {
+        init().then(() => {
+            let typ = typeof key;
+            let errors = [];
+            /**Complete count*/
+            let i = 0;
+            /**@type {number} Basic length*/
+            let blen = undefined;
+            function resolve_function() {
+                i += 1;
+                if (i == blen) {
+                    errors.length ? reject(errors) : resolve();
+                }
+            }
+            /**@param {any} err Error*/
+            function reject_function(err) {
+                i += 1;
+                errors.append(err);
+                if (i == blen) {
+                    errors.length ? reject(errors) : resolve();
+                }
+            }
+            function is_multiply_key() {
+                if (!Array.isArray(key)) return false;
+                if (key.length === 3) return false;
+                for (let k of key) {
+                    if (!Array.isArray(k) || k.length !== 3) return false;
+                }
+                return true;
+            }
+            if (typ == "number") {
+                get_chapters_keys_by_chapterId(key).then((keys) => {
+                    if (keys === undefined || keys.length == 0) {
+                        resolve();
+                        return;
+                    }
+                    blen = keys.length;
+                    for (let k of keys) {
+                        delete_idb_data('chapters', k).then(resolve_function).catch(reject_function);
+                    }
+                }).catch(reject)
+            } else if (is_multiply_key()) {
+                blen = key.length;
+                for (let k of key) {
+                    delete_idb_data('chapters', k).then(resolve_function).catch(reject_function);
+                } 
+            } else {
+                delete_idb_data('chapters', key).then(resolve).catch(reject);
+            }
+        }).catch(reject)
+    })
+}
+
+/**
  * Get book info from database
  * @param {number} bookId
  */
@@ -83,9 +166,68 @@ function set_idb_data(loc, data, id) {
 }
 
 /**
+ * Return all book ids in books store
+ * @returns {Promise<Array<number>>}
+ */
+function get_all_book_ids() {
+    return new Promise((resolve, reject) => {
+        init().then(() => {
+            let tx = db.transaction(['books'], 'readonly');
+            let store = tx.objectStore('books');
+            let req = store.getAllKeys();
+            req.onsuccess = () => {
+                resolve(req.result);
+            }
+            req.onerror = () => {
+                need_reinit = true;
+                reject(req.error);
+            }
+        }).catch(reject)
+    })
+}
+
+/**
+ * Return all available book ids from chapters
+ * @param {Array<[number, number, Date]>} data Chapter key's list. Can be undefined.
+ * @returns {Promise<Array<number>>}
+ */
+async function get_all_book_ids_from_chapters(data) {
+    data = data || (await get_all_chapters_keys());
+    let ids = [];
+    for (let d of data) {
+        let bookId = d[1];
+        if (ids.indexOf(bookId) == -1) {
+            ids.push(bookId);
+        }
+    }
+    return ids;
+}
+
+/**
+ * Get all chapters' keys from database
+ * @returns {Promise<Array<[number, number, Date]>>}
+ */
+function get_all_chapters_keys() {
+    return new Promise((resolve, reject) => {
+        init().then(() => {
+            let tx = db.transaction(['chapters'], 'readonly');
+            let store = tx.objectStore('chapters');
+            let req = store.getAllKeys();
+            req.onsuccess = () => {
+                resolve(req.result);
+            }
+            req.onerror = () => {
+                need_reinit = true;
+                reject(req.error);
+            }
+        }).catch(reject);
+    })
+}
+
+/**
  * search all chapters keys by bookId
  * @param {number} bookId BookId
- * @returns {Array<[number, number, Time]>}
+ * @returns {Promise<Array<[number, number, Date]>>}
  */
 function get_chapters_keys_by_bookId(bookId) {
     return new Promise((resolve, reject) => {
@@ -108,7 +250,7 @@ function get_chapters_keys_by_bookId(bookId) {
 /**
  * search all chapters keys by chapterId
  * @param {number} id chapterId
- * @returns {Array<[number, number, Time]>}
+ * @returns {Promise<Array<[number, number, Date]>>}
  */
 function get_chapters_keys_by_chapterId(id) {
     return new Promise((resolve, reject) => {
@@ -131,7 +273,7 @@ function get_chapters_keys_by_chapterId(id) {
 /**
  * Return latest chapter key by chapterId
  * @param {number} id chapterId
- * @returns {[number, number, Time]}
+ * @returns {[number, number, Date]}
  */
 async function get_latest_chapters_key_by_chapterId(id) {
     let keys = await get_chapters_keys_by_chapterId(id);
@@ -149,7 +291,7 @@ async function get_latest_chapters_key_by_chapterId(id) {
 
 /**
  * return chapter information by key
- * @param {[number, number, Time]} key 
+ * @param {[number, number, Date]} key 
  * @returns {Promise<QDChapterInfo>}
  */
 function get_chatper(key) {
@@ -218,6 +360,10 @@ function save_chapter(info) {
 }
 
 module.exports = {
+    delete_chapter,
+    get_all_book_ids,
+    get_all_book_ids_from_chapters,
+    get_all_chapters_keys,
     get_book_info,
     get_chapters_keys_by_bookId,
     get_chapters_keys_by_chapterId,

@@ -27,4 +27,5 @@ IF %FORCE_BUILD% == 1 SET "pyt=%pyt% -f"
 %pyt% -t popup.js
 %pyt% -t sandbox.js
 %pyt% -t options.js
+%pyt% -t manage.js
 ENDLOCAL
