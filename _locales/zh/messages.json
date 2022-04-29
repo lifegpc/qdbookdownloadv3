@@ -36,5 +36,7 @@
     "save_ok": { "message": "保存成功。" },
     "chapter_already_exists_in_db": { "message": "章节已经存在于数据库中。" },
     "ask_continue": { "message": "是否继续？" },
-    "manage_title": { "message": "管理书籍" }
+    "manage_title": { "message": "管理书籍" },
+    "click_manage_website": { "message": "请点击你要管理的网站：" },
+    "return": { "message": "返回" }
 }

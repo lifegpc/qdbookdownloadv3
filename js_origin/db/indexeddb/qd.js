@@ -130,6 +130,7 @@ function delete_chapter(key) {
 /**
  * Get book info from database
  * @param {number} bookId
+ * @returns {Promise<QDBookInfo>}
  */
 function get_book_info(bookId) {
     return new Promise((resolve, reject) => {
@@ -146,6 +147,17 @@ function get_book_info(bookId) {
             }
         })
     })
+}
+
+/**
+ * Get book info from chapters list
+ * @param {number} bookId 
+ */
+async function get_book_info_from_chapter(bookId) {
+    let keys = await get_chapters_keys_by_bookId(bookId);
+    if (!keys.length) return null;
+    keys.sort((a, b) => { return b[2] - a[2] });
+    return await get_chatper(keys[0]);
 }
 
 function set_idb_data(loc, data, id) {
@@ -365,6 +377,7 @@ module.exports = {
     get_all_book_ids_from_chapters,
     get_all_chapters_keys,
     get_book_info,
+    get_book_info_from_chapter,
     get_chapters_keys_by_bookId,
     get_chapters_keys_by_chapterId,
     get_chatper,

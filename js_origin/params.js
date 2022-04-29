@@ -8,6 +8,8 @@ function get_page_params() {
  */
 function change_page_params(params) {
     history.replaceState(null, null, '?' + params.toString());
+    let e = new Event('replaceState', {'cancelable': true, 'bubbles': true});
+    document.dispatchEvent(e);
 }
 
 module.exports = {
