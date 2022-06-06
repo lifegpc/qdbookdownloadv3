@@ -1,4 +1,4 @@
-const { getQdChapterGdata, getQdChapter } = require('./messages');
+const { getQdBookGdata, getQdChapterGdata, getQdChapter } = require('./messages');
 const { getCurrentTab } = require('./tabs');
 const { eval_gdata } = require('./eval');
 const match_urls = require('./match_urls');
@@ -99,7 +99,7 @@ function generate_book_info(data, settings, doc = document) {
  * @param {number} tabId Tab id
  * @param {Settings} settings Settings
  */
-async function load_qd_book_info(tabId, settings) {
+async function load_qd_chapter_info(tabId, settings) {
     let g_data = await getQdChapterGdata(tabId);
     if (!g_data['ok']) {
         throw new Error(g_data['msg']);
@@ -115,6 +115,19 @@ async function load_qd_book_info(tabId, settings) {
     document.getElementById('main').append(generate_book_info(qdc, settings));
 }
 
+/**
+ * @param {number} tabId Tab id
+ * @param {Settings} settings Settings
+ */
+async function load_qd_book_info(tabId, settings) {
+    let g_data = await getQdBookGdata(tabId);
+    if (!g_data['ok']) {
+        throw new Error(g_data['msg']);
+    }
+    g_data = g_data['g_data'];
+    g_data = await eval_gdata(g_data);
+}
+
 async function basic_handle() {
     let settings = await get_settings();
     let tab = await getCurrentTab();
@@ -123,6 +136,8 @@ async function basic_handle() {
     document.getElementById('main').style.width = tab['width'] / 2;
     let re = match_urls.match_url(url);
     if (re == match_urls.QD_CHAPTER) {
+        await load_qd_chapter_info(tabId, settings);
+    } else if (re == match_urls.QD_BOOK) {
         await load_qd_book_info(tabId, settings);
     }
 }

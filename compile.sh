@@ -57,3 +57,4 @@ $PYT -t popup.js
 $PYT -t sandbox.js
 $PYT -t options.js
 $PYT -t manage.js
+$PYT -t qdbook.js

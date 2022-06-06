@@ -38,5 +38,7 @@
     "ask_continue": { "message": "是否继续？" },
     "manage_title": { "message": "管理书籍" },
     "click_manage_website": { "message": "请点击你要管理的网站：" },
-    "return": { "message": "返回" }
+    "return": { "message": "返回" },
+    "error_occured": { "message": "发生了一些错误：" },
+    "data_not_found": { "message": "没有找到数据。" }
 }

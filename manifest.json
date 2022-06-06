@@ -31,6 +31,15 @@
             "js": [
                 "js/qdchapter.js"
             ]
+        },
+        {
+            "matches": [
+                "http://*.qidian.com/info/*",
+                "https://*.qidian.com/info/*"
+            ],
+            "js": [
+                "js/qdbook.js"
+            ]
         }
     ],
     "permissions": [

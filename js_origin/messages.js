@@ -48,6 +48,16 @@ function getQdChapterGdata(tabId) {
 }
 
 /**
+ * @param {number} tabId Tab id
+ * @returns {Promise<any>} data
+ */
+ function getQdBookGdata(tabId) {
+    /**@type {Promise<any>} data*/
+    let p = browser['tabs']['sendMessage'](tabId, {'@type': 'get_qdbook_gdata'});
+    return p;
+}
+
+/**
  * @param {Uint8Array | string} data Data. If it is a string, will encoding it with UTF-8.
  * @param {number} level Compression level.
  * @returns {Promise<{data: Uint8Array, length: number}>}
@@ -134,6 +144,7 @@ async function quick_uncompress_with_decode(data, length, encoding) {
 }
 
 module.exports = {
+    getQdBookGdata,
     getQdChapter,
     getQdChapterGdata,
     quick_compress,
