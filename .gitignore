@@ -6,3 +6,4 @@ _*.js
 *.wasm
 .compile-cache/
 __pycache__/
+webdav.yaml

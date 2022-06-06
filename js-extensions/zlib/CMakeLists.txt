@@ -6,8 +6,8 @@ find_package(ZLIB REQUIRED)
 
 option(WEB_ONLY "Build only for web" ON)
 option(ALLOW_MEMORY_GROWTH "Allow memory growth" ON)
-option(TOTAL_STACK "The total stack size." "512KB")
-option(INITIAL_MEMORY "Initial memory size" "1MB")
+set(TOTAL_STACK "512KB" CACHE STRING "The total stack size.")
+set(INITIAL_MEMORY "1MB" CACHE STRING "Initial memory size")
 option(MEMORY_GROWTH_LINEAR_STEP "Memory growth step" OFF)
 
 include(GNUInstallDirs)
