@@ -32,6 +32,15 @@ function connect_handler(port) {
                 re['ok'] = false;
                 p['postMessage'](re);
             })
+        } else if (typ == "qd_get_chapter") {
+            let key = m['key'];
+            key[2] = new Date(key[2]);
+            indexeddb_qd.get_chatper(key).then(chapter => {
+                p['postMessage']({ '@type': 'qd_get_chapter', 'ok': true, 'g_data': chapter._g_data, "data": chapter._data, 'rand': m['rand'] });
+            }).catch(e => {
+                console.warn("Failed to get chapter:", e);
+                p['postMessage']({ '@type': 'qd_get_chapter', 'ok': false });
+            })
         }
     })
 }

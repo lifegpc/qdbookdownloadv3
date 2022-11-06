@@ -1,3 +1,4 @@
+const { u8arrcmp } = require('./binary');
 const { browser } = require('./const');
 const { EventPool, MyEvent } = require('./eventpool');
 const { QDChapterInfo } = require('./qdchapter_info');
@@ -88,7 +89,12 @@ function eval_gdata(g_data) {
 async function get_latest_chapters_key_by_chapterId(chapter_id) {
     return request_with_port('qd_get_latest_chapters_key', (port, rand) => {
         port['postMessage']({ '@type': 'qd_get_latest_chapters_key', 'chapter_id': chapter_id, 'rand': rand });
-    }, data => data['key']);
+    }, data => {
+        let key = data['key'];
+        if (!Array.isArray(key)) return key;
+        key[2] = new Date(key[2]);
+        return key;
+    });
 }
 
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
@@ -174,6 +180,18 @@ async function save_chapter(chapter) {
     }, () => { });
 }
 
+/**
+ * @param {[number, number, Date]} key
+ * @returns {Promise<QDChapterInfo>}
+ */
+async function get_chapter(key) {
+    return request_with_port('qd_get_chapter', (port, rand) => {
+        port['postMessage']({ '@type': 'qd_get_chapter', 'key': key, 'rand': rand });
+    }, data => {
+        return new QDChapterInfo(data['g_data'], data['data']);
+    });
+}
+
 let saved_to_database = false;
 let save_to_database_fatal = false;
 let gg_data = undefined;
@@ -246,6 +264,14 @@ get_settings().then(settings => {
                 if (!key) {
                     await save_chapter(ci);
                     console.log('Saved chapter to database.');
+                } else {
+                    let old = await get_chapter(key);
+                    if (u8arrcmp(old.get_hash(), ci.get_hash())) {
+                        console.log('Chapter not changed, skip save to database.');
+                    } else {
+                        await save_chapter(ci);
+                        console.log('Saved chapter to database.');
+                    }
                 }
                 saved_to_database = true;
             }

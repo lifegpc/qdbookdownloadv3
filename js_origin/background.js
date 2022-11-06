@@ -72,7 +72,7 @@ browser['runtime']['onConnect']['addListener'](p => {
         /**@type {boolean}*/
         let allow_create_tab = m['@act'];
         if (typeof allow_create_tab != "boolean") allow_create_tab = true;
-        const ALLOW_TYPES = ["eval_gdata", "qd_get_latest_chapters_key", 'qd_save_chapter'];
+        const ALLOW_TYPES = ["eval_gdata", "qd_get_latest_chapters_key", 'qd_save_chapter', 'qd_get_chapter'];
         if (ALLOW_TYPES.indexOf(typ) >= 0) {
             let rand = m['rand'];
             get_port(allow_create_tab).then(p => {
