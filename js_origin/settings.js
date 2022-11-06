@@ -106,7 +106,7 @@ class Settings {
     }
     _add_listener() {
         let storage = browser["storage"];
-        storage["onChanged"]["addListener"]((changes, area) => {this._change_callback(changes, area)})
+        storage["onChanged"]["addListener"]((changes, area) => { this._change_callback(changes, area) })
     }
     _change_callback(changes, area) {
         if (area == this._area && !this._is_saving) {
@@ -212,6 +212,13 @@ class Settings {
     }
     set add_more_info_to_xhtml(value) {
         return this._set_bool("add_more_info_to_xhtml", value);
+    }
+    /**Save data to database automatically.*/
+    get autosave_to_database() {
+        return this._get_bool("autosave_to_database") || false;
+    }
+    set autosave_to_database(value) {
+        return this._set_bool("autosave_to_database", value);
     }
     /**@type {string}*/
     get version() {

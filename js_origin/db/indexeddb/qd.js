@@ -285,7 +285,7 @@ function get_chapters_keys_by_chapterId(id) {
 /**
  * Return latest chapter key by chapterId
  * @param {number} id chapterId
- * @returns {[number, number, Date]}
+ * @returns {Promise<[number, number, Date]>}
  */
 async function get_latest_chapters_key_by_chapterId(id) {
     let keys = await get_chapters_keys_by_chapterId(id);

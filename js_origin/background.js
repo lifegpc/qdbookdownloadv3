@@ -72,14 +72,15 @@ browser['runtime']['onConnect']['addListener'](p => {
         /**@type {boolean}*/
         let allow_create_tab = m['@act'];
         if (typeof allow_create_tab != "boolean") allow_create_tab = true;
-        if (typ == "eval_gdata") {
+        const ALLOW_TYPES = ["eval_gdata", "qd_get_latest_chapters_key", 'qd_save_chapter'];
+        if (ALLOW_TYPES.indexOf(typ) >= 0) {
             let rand = m['rand'];
             get_port(allow_create_tab).then(p => {
                 /**@type {(ev: MyEvent) => void} */
                 let handler = (ev) => {
                     let data = ev['data'];
-                    let typ = data['@type'];
-                    if (typ == "eval_gdata" && rand == data['rand']) {
+                    let typ2 = data['@type'];
+                    if (typ2 == typ && rand == data['rand']) {
                         ev._stop();
                         port['postMessage'](data);
                         ep._removeEventListener('port-message', handler);
