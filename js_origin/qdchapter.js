@@ -239,16 +239,16 @@ get_settings().then(settings => {
                 } else {
                     console.warn('Failed to get upload time.')
                 }
+                ci._data = data;
+                console.log('Current chapter:', ci);
+                let key = await get_latest_chapters_key_by_chapterId(ci.chapterId());
+                console.log('Latest key:', key);
+                if (!key) {
+                    await save_chapter(ci);
+                    console.log('Saved chapter to database.');
+                }
+                saved_to_database = true;
             }
-            ci._data = data;
-            console.log('Current chapter:', ci);
-            let key = await get_latest_chapters_key_by_chapterId(ci.chapterId());
-            console.log('Latest key:', key);
-            if (!key) {
-                await save_chapter(ci);
-                console.log('Saved chapter to database.');
-            }
-            saved_to_database = true;
         }
         if (!saved_to_database && !save_to_database_fatal) {
             setTimeout(save_to_database2, 1000);
