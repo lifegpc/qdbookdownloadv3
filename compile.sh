@@ -58,3 +58,5 @@ $PYT -t sandbox.js
 $PYT -t options.js
 $PYT -t manage.js
 $PYT -t qdbook.js
+$PYT -t forepage.js
+$PYT -t backgroud.js

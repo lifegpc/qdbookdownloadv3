@@ -55,5 +55,6 @@
         "description": "Return to previous page"
     },
     "error_occured": { "message": "Some error occured:" },
-    "data_not_found": { "message": "Data not found." }
+    "data_not_found": { "message": "Data not found." },
+    "forepage_title": { "message": "Please do not close this tab." }
 }

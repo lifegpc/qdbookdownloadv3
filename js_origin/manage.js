@@ -1,8 +1,10 @@
+const { browser } = require('./const');
 const { getI18n } = require('./i18n');
 const { gen_main_list } = require('./manage/main_list');
 const { get_params_info, QIDIAN_TYPE, UNKNOWN_TYPE } = require('./manage/params');
 const qd_book_list = require('./manage/qd_book_list');
 const { get_page_params, change_page_params } = require('./params');
+const connect_handler = require('./sandbox_proxy');
 
 function basic_init() {
     let title = document.createElement('title');
@@ -18,7 +20,7 @@ function gen_return_button(doc = document) {
         let pi = get_params_info();
         let params = get_page_params();
         let type = pi._type();
-        if (state != null) {}
+        if (state != null) { }
         else if (type == QIDIAN_TYPE) {
             let bookId = pi.book_id();
             if (bookId === null) {
@@ -67,3 +69,5 @@ window.addEventListener('replaceState', () => {
         console.error(e);
     });
 });
+
+browser['runtime']['onConnect']['addListener'](connect_handler);

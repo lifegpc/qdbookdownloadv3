@@ -1,3 +1,3 @@
-let browser = window['browser'] || window['chrome'] || window['safari'];
+let browser = globalThis['browser'] || globalThis['chrome'] || globalThis['safari'];
 
 module.exports = { browser };

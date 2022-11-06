@@ -51,5 +51,8 @@
             "sandbox.html"
         ]
     },
-    "options_page": "options.html"
+    "options_page": "options.html",
+    "background": {
+        "service_worker": "js/backgroud.js"
+    }
 }
