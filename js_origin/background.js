@@ -27,7 +27,7 @@ async function get_new_port(allow_create_tab = true) {
             let url = new URL(tab['url']);
             if (url.pathname == '/manage.html' || url.pathname == '/forepage.html') {
                 try {
-                    let port = connectTab(tab['id']);
+                    let port = connectTab(tab['id'], { 'name': 'sandbox' });
                     if (port !== undefined) {
                         current_port = port;
                         add_port_listener();
@@ -43,7 +43,7 @@ async function get_new_port(allow_create_tab = true) {
         let tab = await browser['tabs']['create']({ 'url': browser['runtime']['getURL']('/forepage.html'), 'active': false });
         await waitTabLoaded(tab['id']);
         try {
-            let port = connectTab(tab['id']);
+            let port = connectTab(tab['id'], { 'name': 'sandbox' });
             if (port !== undefined) {
                 current_port = port;
                 add_port_listener();
@@ -66,6 +66,7 @@ async function get_port(allow_create_tab = true) {
 }
 
 browser['runtime']['onConnect']['addListener'](p => {
+    if (p['name'] != 'background') return;
     p['onMessage']['addListener']((m, port) => {
         let typ = m['@type'];
         /**@type {boolean}*/
@@ -93,7 +94,6 @@ browser['runtime']['onConnect']['addListener'](p => {
                 }
                 ep._addEventListener('port-message', handler);
                 ep._addEventListener('port-disconnect', handler2);
-                m['@type'] = 'eval_gdata2';
                 p['postMessage'](m);
             }).catch(e => {
                 console.warn(e);

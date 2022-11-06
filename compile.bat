@@ -30,5 +30,5 @@ IF %FORCE_BUILD% == 1 SET "pyt=%pyt% -f"
 %pyt% -t manage.js
 %pyt% -t qdbook.js
 %pyt% -t forepage.js
-%pyt% -t backgroud.js
+%pyt% -t background.js
 ENDLOCAL

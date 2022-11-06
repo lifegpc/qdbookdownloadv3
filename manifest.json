@@ -53,6 +53,6 @@
     },
     "options_page": "options.html",
     "background": {
-        "service_worker": "js/backgroud.js"
+        "service_worker": "js/background.js"
     }
 }
