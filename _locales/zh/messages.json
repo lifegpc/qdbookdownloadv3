@@ -42,5 +42,6 @@
     "error_occured": { "message": "发生了一些错误：" },
     "data_not_found": { "message": "没有找到数据。" },
     "forepage_title": { "message": "请不要关闭此标签页。" },
-    "autosave_to_database": { "message": "自动将数据保存到数据库。" }
+    "autosave_to_database": { "message": "自动将数据保存到数据库。" },
+    "saveAsZip": { "message": "保存为ZIP文件" }
 }

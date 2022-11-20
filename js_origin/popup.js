@@ -8,6 +8,8 @@ const { saveBlob } = require('./save_file');
 const { get_settings, Settings } = require('./settings');
 const indexeddb_qd = require('./db/indexeddb/qd');
 const { u8arrcmp } = require('./binary');
+const { Zip } = require('./zip/file');
+const { ZIP_STORED } = require('./zip/const');
 
 /**
  * @param {QDChapterInfo} data Chapter info
@@ -92,6 +94,20 @@ function generate_book_info(data, settings, doc = document) {
         })
     })
     d.append(saveToDatabase);
+    let saveAsZip = doc.createElement('button');
+    saveAsZip.innerText = getI18n('saveAsZip');
+    saveAsZip.addEventListener('click', () => {
+        let zip = new Zip();
+        let encoder = new TextEncoder();
+        zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`, encoder.encode(genText()));
+        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`, encoder.encode(data.toXhtml(settings).to_xhtml()));
+        zip._toBlob({ 'type': 'application/zip' }).then((blob) => {
+            saveBlob(blob, `${data.bookName()}-${data.chapterName()}.zip`);
+        }).catch(e => {
+            console.error(e);
+        })
+    })
+    d.append(saveAsZip);
     return d;
 }
 

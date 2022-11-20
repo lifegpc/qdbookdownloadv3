@@ -7,6 +7,9 @@ zlib['onRuntimeInitialized'] = () => {
     zlib_initalized = true;
 }
 
+const Z_STREAM_END = 1;
+const Z_FINISH = 4;
+
 /**
  * @returns {Promise<void>}
  */
@@ -153,4 +156,147 @@ async function uncompress(data, length) {
     return tuncompress(data, length);
 }
 
-module.exports = { zlib_initalized, compress, uncompress };
+class Deflate {
+    constructor(level = -1) {
+        let malloc = zlib['_malloc'];
+        let deflate_init = zlib['_deflate_init'];
+        let stream_out = malloc(4);
+        if (stream_out == null) {
+            throw new Error('No enough memory.');
+        }
+        let re = deflate_init(level, stream_out);
+        if (!re) {
+            /**@type {number}*/
+            this._stream = zlib['HEAPU32'][stream_out >> 2];
+        }
+        zlib['_free'](stream_out);
+        if (re) throw new Error(zlib.get_errmsg(re));
+        /**@type {boolean}*/
+        this._finshed = false;
+    }
+    _data_type() {
+        if (this._stream == null) throw new Error('The stream is destroyed.');
+        return zlib['_z_stream_data_type'](this._stream);
+    }
+    _destory() {
+        let free = zlib['_free'];
+        let deflateEnd = zlib['_deflateEnd'];
+        if (this._stream) {
+            deflateEnd(this._stream);
+            free(this._stream);
+            this._stream = null;
+        }
+        this._finshed = true;
+    }
+    _finish() {
+        let malloc = zlib['_malloc'];
+        let free = zlib['_free'];
+        let deflate = zlib['_deflate2'];
+        let destLen_ptr = malloc(8);
+        if (destLen_ptr == null) {
+            throw new Error('No enough memory.');
+        }
+        let dest_ptr_ptr = destLen_ptr + 4;
+        let re = 0;
+        let array = new Uint8Array();
+        while (re != Z_STREAM_END) {
+            zlib['HEAPU32'][destLen_ptr >> 2] = 4096;
+            re = deflate(this._stream, 0, 0, dest_ptr_ptr, destLen_ptr, Z_FINISH);
+            if (re != 0 && re != Z_STREAM_END) {
+                free(destLen_ptr);
+                throw new Error(zlib.get_errmsg(re));
+            }
+            let destLen = zlib['HEAPU32'][destLen_ptr >> 2];
+            let dest_ptr = zlib['HEAPU32'][dest_ptr_ptr >> 2];
+            let len = array.length;
+            let tmp = new Uint8Array(len + destLen);
+            tmp.set(array);
+            tmp.set(zlib['HEAPU8'].subarray(dest_ptr, dest_ptr + destLen), len);
+            array = tmp;
+            free(dest_ptr);
+        }
+        free(destLen_ptr);
+        this._finshed = true;
+        return array;
+    }
+    /**
+     * @param {Uint8Array} data
+     */
+    _update(data) {
+        if (this._finshed) throw new Error('The stream has been finished.');
+        if (!data.length) return new Uint8Array();
+        let malloc = zlib['_malloc'];
+        let free = zlib['_free'];
+        let deflate = zlib['_deflate2'];
+        let source_ptr = malloc(data.length);
+        if (source_ptr == null) {
+            throw new Error('No enough memory.');
+        }
+        zlib['HEAPU8'].set(data, source_ptr);
+        let sourceLen_ptr = malloc(12);
+        if (sourceLen_ptr == null) {
+            free(source_ptr);
+            throw new Error('No enough memory.');
+        }
+        let destLen_ptr = sourceLen_ptr + 4;
+        let dest_ptr_ptr = sourceLen_ptr + 8;
+        zlib['HEAPU32'][sourceLen_ptr >> 2] = data.length;
+        zlib['HEAPU32'][destLen_ptr >> 2] = data.length;
+        let re = deflate(this._stream, source_ptr, sourceLen_ptr, dest_ptr_ptr, destLen_ptr, 0);
+        if (!re) {
+            let destLen = zlib['HEAPU32'][destLen_ptr >> 2];
+            let dest_ptr = zlib['HEAPU32'][dest_ptr_ptr >> 2];
+            let arr = new Uint8Array(destLen);
+            arr.set(zlib['HEAPU8'].subarray(dest_ptr, dest_ptr + destLen));
+            free(dest_ptr);
+            free(sourceLen_ptr);
+            free(source_ptr);
+            return arr;
+        } else {
+            free(sourceLen_ptr);
+            free(source_ptr);
+            throw new Error(zlib.get_errmsg(re));
+        }
+    }
+}
+
+/**
+ * @param {Uint8Array} data Data
+ * @param {number} level Compress Level
+ */
+async function compress2(data, level = -1) {
+    await make_sure_is_initialized();
+    let stream = new Deflate(level);
+    try {
+        let arr = stream._update(data);
+        let arr2 = stream._finish();
+        let tmp = new Uint8Array(arr.length + arr2.length);
+        tmp.set(arr);
+        tmp.set(arr2, arr.length);
+        stream._destory();
+        return tmp;
+    } catch (e) {
+        stream._destory();
+        throw e;
+    }
+}
+
+async function compress2d(data, level = -1) {
+    await make_sure_is_initialized();
+    let stream = new Deflate(level);
+    try {
+        let arr = stream._update(data);
+        let arr2 = stream._finish();
+        let tmp = new Uint8Array(arr.length + arr2.length);
+        tmp.set(arr);
+        tmp.set(arr2, arr.length);
+        let is_text = stream._data_type() == 1;
+        stream._destory();
+        return { 'data': tmp, 'is_text': is_text }
+    } catch (e) {
+        stream._destory();
+        throw e;
+    }
+}
+
+module.exports = { zlib_initalized, Deflate, compress, compress2, compress2d, uncompress };

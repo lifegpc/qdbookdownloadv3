@@ -57,5 +57,6 @@
     "error_occured": { "message": "Some error occured:" },
     "data_not_found": { "message": "Data not found." },
     "forepage_title": { "message": "Please do not close this tab." },
-    "autosave_to_database": { "message": "Save data to database automatically." }
+    "autosave_to_database": { "message": "Save data to database automatically." },
+    "saveAsZip": { "message": "Save as a ZIP file" }
 }

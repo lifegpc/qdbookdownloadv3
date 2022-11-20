@@ -95,6 +95,43 @@ function quick_compress(data, level) {
 }
 
 /**
+ * @param {Uint8Array | string} data Data. If it is a string, will encoding it with UTF-8.
+ * @param {number} level Compression level.
+ * @returns {Promise<{data: Uint8Array, is_text: boolean, length: number}>}
+ */
+ function quick_compress2(data, level) {
+    if (typeof data == "string") {
+        data = new TextEncoder().encode(data);
+    }
+    let len = data.length;
+    /**@type {HTMLIFrameElement} */
+    let sandbox = document.getElementById('sandbox');
+    let rand = Math.random();
+    sandbox.contentWindow.postMessage({'@type': 'quick_compress2', 'data': data, 'rand': rand, 'level': level}, "*");
+    return new Promise((resolve, reject) => {
+        /**
+         * @param {MessageEvent} ev
+         */
+        let listener = (ev) => {
+            let data = ev.data;
+            if (data['@type'] == 'quick_compress2_result') {
+                if (rand == data['rand']) {
+                    window.removeEventListener('message', listener);
+                    let ok = data['ok'];
+                    if (ok) {
+                        resolve({data: data['data']['data'], is_text: data['data']['is_text'], length: len});
+                    } else {
+                        reject(data['error']);
+                    }
+                    ev.stopImmediatePropagation();
+                }
+            }
+        }
+        window.addEventListener('message', listener);
+    })
+}
+
+/**
  * @param {Uint8Array | {"data": Uint8Array, "length": number}} data Compressed data. If data is Uint8Array, the length will be used.
  * @param {number} length The length of uncompressed data.
  * @returns {Promise<Uint8Array>}
@@ -148,6 +185,7 @@ module.exports = {
     getQdChapter,
     getQdChapterGdata,
     quick_compress,
+    quick_compress2,
     quick_uncompress,
     quick_uncompress_with_decode,
 };
