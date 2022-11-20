@@ -220,6 +220,13 @@ class Settings {
     set autosave_to_database(value) {
         return this._set_bool("autosave_to_database", value);
     }
+    /**Save unpurchased chapters to database automatically.*/
+    get autosave_unbuy_chapter() {
+        return this._get_bool("autosave_unbuy_chapter") || false;
+    }
+    set autosave_unbuy_chapter(value) {
+        return this._set_bool("autosave_unbuy_chapter", value);
+    }
     /**@type {string}*/
     get version() {
         return this._data["version"];

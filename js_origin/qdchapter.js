@@ -233,8 +233,8 @@ get_settings().then(settings => {
                 console.warn('Failed to get chapter name.');
             }
             let max = ci.vipStatus() == 1 && ci.isBuy() == 0 ? cols.length : cols.length - 1;
-            if (ci.vipStatus() == 1 && ci.isBuy() == 0) {
-                // TODO: Add buy status
+            if (ci.vipStatus() == 1 && ci.isBuy() == 0 && !settings.autosave_unbuy_chapter) {
+                return;
             }
             if (max > 0) {
                 for (let i = 1; i < max; i++) {

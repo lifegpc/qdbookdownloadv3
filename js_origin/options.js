@@ -18,6 +18,7 @@ async function main_handle() {
     bool_buttons.push(new BoolTemplate('strip_in_xhtml_file', getI18n('strip_in_xhtml_file'), '', settings, false));
     bool_buttons.push(new BoolTemplate('add_more_info_to_xhtml', getI18n('add_more_info_to_xhtml'), '', settings, false));
     bool_buttons.push(new BoolTemplate('autosave_to_database', getI18n('autosave_to_database'), '', settings, false));
+    bool_buttons.push(new BoolTemplate('autosave_unbuy_chapter', getI18n('autosave_unbuy_chapter'), '', settings, false));
     let save = document.getElementById('save');
     save.innerText = getI18n('save');
     save.addEventListener('click', () => {
