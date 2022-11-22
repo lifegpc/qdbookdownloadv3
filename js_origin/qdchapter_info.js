@@ -135,7 +135,20 @@ class QDChapterInfo {
                 let a = document.createElement('div');
                 this.contents().forEach(v => {
                     a.innerHTML = v;
-                    this._real_words += a.innerText.trim().length;
+                    let tmp = 0;
+                    for (let e of a.children) {
+                        let have_attr = false;
+                        for (let attr of e.getAttributeNames()) {
+                            let value = e.getAttribute(attr);
+                            if (value !== null && value.length) {
+                                have_attr = true;
+                            }
+                        }
+                        if (have_attr) {
+                            tmp += 1;
+                        }
+                    }
+                    this._real_words += a.innerText.trim().length + tmp;
                 })
             }
         }
