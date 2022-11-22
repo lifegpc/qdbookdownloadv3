@@ -59,5 +59,9 @@
     "forepage_title": { "message": "Please do not close this tab." },
     "autosave_to_database": { "message": "Save data to database automatically." },
     "saveAsZip": { "message": "Save as a ZIP file" },
-    "autosave_unbuy_chapter": { "message": "Save unpurchased chapters to database automatically." }
+    "autosave_unbuy_chapter": { "message": "Save unpurchased chapters to database automatically." },
+    "unknown_protect_type": { "message": "Unknown protect type." },
+    "not_support_preview": { "message": "Preview is not supported due to protect method." },
+    "saveFailed": { "message": "Failed to save." },
+    "use_save_as_zip": { "message": "Due to protect, please use Save as a ZIP file." }
 }

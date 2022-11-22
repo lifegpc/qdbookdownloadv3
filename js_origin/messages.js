@@ -7,7 +7,7 @@ const { browser } = require('./const');
  */
 function _getQdChapter(tabId, g_data) {
     /**@type {Promise<any>} data*/
-    let p = browser['tabs']['sendMessage'](tabId, {'@type': 'get_qdchapter', 'g_data': g_data});
+    let p = browser['tabs']['sendMessage'](tabId, { '@type': 'get_qdchapter', 'g_data': g_data });
     return p;
 }
 
@@ -20,6 +20,10 @@ function getQdChapter(tabId, g_data) {
     return new Promise((resolve, reject) => {
         function a() {
             _getQdChapter(tabId, g_data).then(data => {
+                let ok = data['ok'];
+                if (!ok) {
+                    reject(data['msg']);
+                }
                 let code = data['code'];
                 if (code == 0) {
                     resolve(data);
@@ -43,7 +47,7 @@ function getQdChapter(tabId, g_data) {
  */
 function getQdChapterGdata(tabId) {
     /**@type {Promise<any>} data*/
-    let p = browser['tabs']['sendMessage'](tabId, {'@type': 'get_qdchapter_gdata'});
+    let p = browser['tabs']['sendMessage'](tabId, { '@type': 'get_qdchapter_gdata' });
     return p;
 }
 
@@ -51,9 +55,9 @@ function getQdChapterGdata(tabId) {
  * @param {number} tabId Tab id
  * @returns {Promise<any>} data
  */
- function getQdBookGdata(tabId) {
+function getQdBookGdata(tabId) {
     /**@type {Promise<any>} data*/
-    let p = browser['tabs']['sendMessage'](tabId, {'@type': 'get_qdbook_gdata'});
+    let p = browser['tabs']['sendMessage'](tabId, { '@type': 'get_qdbook_gdata' });
     return p;
 }
 
@@ -70,7 +74,7 @@ function quick_compress(data, level) {
     /**@type {HTMLIFrameElement} */
     let sandbox = document.getElementById('sandbox');
     let rand = Math.random();
-    sandbox.contentWindow.postMessage({'@type': 'quick_compress', 'data': data, 'rand': rand, 'level': level}, "*");
+    sandbox.contentWindow.postMessage({ '@type': 'quick_compress', 'data': data, 'rand': rand, 'level': level }, "*");
     return new Promise((resolve, reject) => {
         /**
          * @param {MessageEvent} ev
@@ -82,7 +86,7 @@ function quick_compress(data, level) {
                     window.removeEventListener('message', listener);
                     let ok = data['ok'];
                     if (ok) {
-                        resolve({data: data['data'], length: len});
+                        resolve({ data: data['data'], length: len });
                     } else {
                         reject(data['error']);
                     }
@@ -99,7 +103,7 @@ function quick_compress(data, level) {
  * @param {number} level Compression level.
  * @returns {Promise<{data: Uint8Array, is_text: boolean, length: number}>}
  */
- function quick_compress2(data, level) {
+function quick_compress2(data, level) {
     if (typeof data == "string") {
         data = new TextEncoder().encode(data);
     }
@@ -107,7 +111,7 @@ function quick_compress(data, level) {
     /**@type {HTMLIFrameElement} */
     let sandbox = document.getElementById('sandbox');
     let rand = Math.random();
-    sandbox.contentWindow.postMessage({'@type': 'quick_compress2', 'data': data, 'rand': rand, 'level': level}, "*");
+    sandbox.contentWindow.postMessage({ '@type': 'quick_compress2', 'data': data, 'rand': rand, 'level': level }, "*");
     return new Promise((resolve, reject) => {
         /**
          * @param {MessageEvent} ev
@@ -119,7 +123,7 @@ function quick_compress(data, level) {
                     window.removeEventListener('message', listener);
                     let ok = data['ok'];
                     if (ok) {
-                        resolve({data: data['data']['data'], is_text: data['data']['is_text'], length: len});
+                        resolve({ data: data['data']['data'], is_text: data['data']['is_text'], length: len });
                     } else {
                         reject(data['error']);
                     }
@@ -144,7 +148,7 @@ function quick_uncompress(data, length) {
     /**@type {HTMLIFrameElement} */
     let sandbox = document.getElementById('sandbox');
     let rand = Math.random();
-    sandbox.contentWindow.postMessage({'@type': 'quick_uncompress', 'data': data, 'length': length, 'rand': rand}, "*");
+    sandbox.contentWindow.postMessage({ '@type': 'quick_uncompress', 'data': data, 'length': length, 'rand': rand }, "*");
     return new Promise((resolve, reject) => {
         /**
          * @param {MessageEvent} ev

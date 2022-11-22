@@ -1,5 +1,43 @@
 const compress = require('./compress');
 
+/**
+ * @param {string} fpScript 
+ */
+ function eval_fpScript(fpScript) {
+    let datas = fpScript.split('\n');
+    let re = [];
+    for (let data of datas) {
+        data = data.trim();
+        if (data.startsWith('var el') || data.startsWith('el.')) {
+            continue
+        }
+        re.push(data);
+    }
+    let fpData = eval(`(function(){var window={};${re.join('\n')};return window;})()`);
+    if (fpData.hasOwnProperty('cContent')) {
+        delete fpData['cContent'];
+    }
+    if (fpData.hasOwnProperty("randomFont")) {
+        try {
+            let a = document.createElement('text');
+            a.innerHTML = fpData['randomFont'];
+            fpData['randomFont'] = new Uint8Array(JSON.parse(a.innerText)['data']);
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+    if (fpData.hasOwnProperty("encodeCss")) {
+        try {
+            let a = document.createElement('text');
+            a.innerHTML = fpData['encodeCss'];
+            fpData['encodeCss'] = a.innerText;
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+    return fpData;
+}
+
 window.addEventListener('message', (ev) => {
     let source = ev.source;
     let data = ev.data;
@@ -41,5 +79,15 @@ window.addEventListener('message', (ev) => {
             re['error'] = e;
             source.postMessage(re, '*');
         })
+    } else if (data['@type'] == 'eval_fpScript') {
+        let fpScript = data['fpScript'];
+        let re = { '@type': 'fpScript_result', 'ok': true, 'rand': data['rand'] };
+        try {
+            re['data'] = eval_fpScript(fpScript);
+        } catch (e) {
+            re['ok'] = false;
+            re['error'] = e;
+        }
+        source.postMessage(re, '*');
     }
 })

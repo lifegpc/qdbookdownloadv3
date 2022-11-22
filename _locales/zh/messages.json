@@ -44,5 +44,9 @@
     "forepage_title": { "message": "请不要关闭此标签页。" },
     "autosave_to_database": { "message": "自动将数据保存到数据库。" },
     "saveAsZip": { "message": "保存为ZIP文件" },
-    "autosave_unbuy_chapter": { "message": "自动将未购买章节保存到数据库。" }
+    "autosave_unbuy_chapter": { "message": "自动将未购买章节保存到数据库。" },
+    "unknown_protect_type": { "message": "未知的保护方法。" },
+    "not_support_preview": { "message": "由于受到保护，无法显示预览。" },
+    "saveFailed": { "message": "保存失败。" },
+    "use_save_as_zip": { "message": "由于受到保护，请使用保存为ZIP文件。" }
 }

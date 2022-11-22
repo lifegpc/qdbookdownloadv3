@@ -1,6 +1,6 @@
 const { getQdBookGdata, getQdChapterGdata, getQdChapter } = require('./messages');
 const { getCurrentTab } = require('./tabs');
-const { eval_gdata } = require('./eval');
+const { eval_gdata, eval_fpScript } = require('./eval');
 const match_urls = require('./match_urls');
 const { QDChapterInfo } = require('./qdchapter_info');
 const { getI18n } = require('./i18n');
@@ -25,7 +25,8 @@ function generate_book_info(data, settings, doc = document) {
     d.append(doc.createElement('br'));
     d.append(`${getI18n('uploadTime')}${data.uploadTime()}`);
     d.append(doc.createElement('br'));
-    d.append(`${getI18n('previewChapter')}${data.contents()[0].trim()}`);
+    d.append(`${getI18n('previewChapter')}`);
+    d.append(data.previewedContent());
     d.append(doc.createElement('br'));
     d.append(`${getI18n('chapterId')}${data.chapterId()}`);
     d.append(doc.createElement('br'));
@@ -63,13 +64,27 @@ function generate_book_info(data, settings, doc = document) {
     let saveAsTxt = doc.createElement('button');
     saveAsTxt.innerText = getI18n('saveAsTxt');
     saveAsTxt.addEventListener('click', () => {
+        if (data.chapter_cES() == 2) {
+            alert(getI18n("use_save_as_zip"));
+            return;
+        }
         saveBlob(new Blob([genText()], { type: 'text/plain;charset=utf-8' }), `${data.bookName()}-${data.chapterName()}.txt`);
     })
     d.append(saveAsTxt);
     let saveAsXhtml = doc.createElement('button');
     saveAsXhtml.innerText = getI18n('saveAsXhtml');
+    async function save_as_xhtml() {
+        if (data.chapter_cES() == 2) {
+            alert(getI18n("use_save_as_zip"));
+            return;
+        }
+        saveBlob((await data.toXhtml(settings)).to_blob(), `${data.bookName()}-${data.chapterName()}.xhtml`);
+    }
     saveAsXhtml.addEventListener('click', () => {
-        saveBlob(data.toXhtml(settings).to_blob(), `${data.bookName()}-${data.chapterName()}.xhtml`);
+        save_as_xhtml().catch(e => {
+            console.error(e);
+            alert(getI18n('saveFailed'));
+        });
     })
     d.append(saveAsXhtml);
     let saveToDatabase = doc.createElement('button');
@@ -96,15 +111,20 @@ function generate_book_info(data, settings, doc = document) {
     d.append(saveToDatabase);
     let saveAsZip = doc.createElement('button');
     saveAsZip.innerText = getI18n('saveAsZip');
-    saveAsZip.addEventListener('click', () => {
+    async function save_as_zip() {
         let zip = new Zip();
         let encoder = new TextEncoder();
-        zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`, encoder.encode(genText()));
-        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`, encoder.encode(data.toXhtml(settings).to_xhtml()));
-        zip._toBlob({ 'type': 'application/zip' }).then((blob) => {
-            saveBlob(blob, `${data.bookName()}-${data.chapterName()}.zip`);
-        }).catch(e => {
+        if (!data.chapter_cES()) zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`, encoder.encode(genText()));
+        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`, encoder.encode((await data.toXhtml(settings, (filename, data) => {
+            zip.add_file(filename, data);
+        })).to_xhtml()));
+        let blob = await zip._toBlob({ 'type': 'application/zip' });
+        saveBlob(blob, `${data.bookName()}-${data.chapterName()}.zip`);
+    }
+    saveAsZip.addEventListener('click', () => {
+        save_as_zip().catch(e => {
             console.error(e);
+            alert(getI18n('saveFailed'));
         })
     })
     d.append(saveAsZip);
@@ -127,6 +147,9 @@ async function load_qd_chapter_info(tabId, settings) {
         throw new Error(data['code']);
     }
     let qdc = new QDChapterInfo(g_data, data['data']);
+    if (qdc.chapter_cES() == 2) {
+        qdc._data['fpScript'] = await eval_fpScript(qdc._data['fpScript']);
+    }
     console.log('Current chapter:', qdc);
     document.getElementById('main').append(generate_book_info(qdc, settings));
 }

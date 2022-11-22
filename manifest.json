@@ -30,7 +30,8 @@
             ],
             "js": [
                 "js/qdchapter.js"
-            ]
+            ],
+            "run_at": "document_start"
         },
         {
             "matches": [

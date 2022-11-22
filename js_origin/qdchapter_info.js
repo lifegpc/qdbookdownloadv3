@@ -105,6 +105,15 @@ class QDChapterInfo {
     contents() {
         return this._data["contents"];
     }
+    previewedContent() {
+        let cES = this.chapter_cES();
+        if (cES == 0) {
+            return this.contents()[0];
+        } else if (cES == 2) {
+            return getI18n('not_support_preview')
+        }
+        return ''
+    }
     /**@returns {number}*/
     words() {
         return this._data["words"];
@@ -117,9 +126,18 @@ class QDChapterInfo {
     realWords() {
         if (this._real_words === undefined) {
             this._real_words = 0;
-            this.contents().forEach((v) => {
-                this._real_words += v.trim().length;
-            });
+            let cES = this.chapter_cES();
+            if (cES == 0) {
+                this.contents().forEach((v) => {
+                    this._real_words += v.trim().length;
+                });
+            } else if (cES == 2) {
+                let a = document.createElement('div');
+                this.contents().forEach(v => {
+                    a.innerHTML = v;
+                    this._real_words += a.innerText.trim().length;
+                })
+            }
         }
         return this._real_words;
     }
@@ -128,20 +146,70 @@ class QDChapterInfo {
         return md5(new TextEncoder().encode(s));
     }
     toJson() {
-        return structuredClone({'g_data': this._g_data, 'data': this._data});
+        return structuredClone({ 'g_data': this._g_data, 'data': this._data });
     }
     static fromJson(json) {
         return new QDChapterInfo(json['g_data'], json['data']);
     }
+    /**@returns {number} 0 is unprotected, 2 is protected*/
+    chapter_cES() {
+        return this._g_data['chapter']['cES'];
+    }
+    /**@returns {string}*/
+    encodeCss() {
+        return this._data['fpScript']['encodeCss'];
+    }
+    /**@returns {Uint8Array}*/
+    randomFont() {
+        return this._data['fpScript']['randomFont'];
+    }
+    /**@returns {string} */
+    fixedFontTtf() {
+        return this._data['fpScript']['fixedFontTtf'];
+    }
     /**
      * Convert to XHTML
      * @param {Settings} settings Settings
+     * @param {(filename: string, data: Uint8Array) => void | undefined} callback Font file callback
      */
-    toXhtml(settings) {
+    async toXhtml(settings, callback = undefined) {
         let x = new XHtml(settings);
         let title = x.doc.createElement('title');
         title.innerText = this.chapterName();
         x.doc.head.append(title);
+        let eCS = this.chapter_cES();
+        if (eCS == 2) {
+            x._skip_strip = true;
+            let randomFontName = `j${this.chapterId()}.ttf`;
+            if (callback != undefined) {
+                callback(randomFontName, this.randomFont());
+            }
+            let fixedFontTtfRe = await fetch(this.fixedFontTtf());
+            let fixedFontTtf = new Uint8Array(await fixedFontTtfRe.arrayBuffer());
+            let fixedFontTtfName = new URL(this.fixedFontTtf()).pathname.split('/').pop();
+            if (fixedFontTtfName === undefined || !fixedFontTtfName.length) {
+                fixedFontTtfName = `j${this.chapterId()}-ttf.ttf`;
+            }
+            if (callback != undefined) {
+                callback(fixedFontTtfName, fixedFontTtf);
+            }
+            let style = x.doc.createElement('style');
+            style.innerHTML = `@font-face {
+font-family: "rj${this.chapterId()}";
+src: url("${randomFontName}");
+}
+@font-face {
+font-family: "j${this.chapterId()}";
+src: url("${fixedFontTtfName}");
+}
+#j${this.chapterId()} p {
+display: flex;
+flex-wrap: wrap;
+align-items: flex-end;
+}
+${this.encodeCss()}`;
+            x.doc.head.append(style);
+        }
         let h1 = x.doc.createElement('h1');
         h1.innerText = this.chapterName();
         x.doc.documentElement.setAttribute('xml:lang', 'zh-Hans-CN');
@@ -153,11 +221,19 @@ class QDChapterInfo {
             p.append(`${getI18n('uploadTime')}${this.uploadTime()}`);
             x.doc.body.append(p);
         }
-        this.contents().forEach((p) => {
-            let pd = x.doc.createElement('p');
-            pd.innerText = p;
-            x.doc.body.append(pd);
-        })
+        if (eCS == 0) {
+            this.contents().forEach((p) => {
+                let pd = x.doc.createElement('p');
+                pd.innerText = p;
+                x.doc.body.append(pd);
+            })
+        } else if (eCS == 2) {
+            let div = x.doc.createElement('div');
+            div.id = `j${this.chapterId()}`;
+            div.innerHTML = this.contents().join('\n');
+            div.style.fontFamily = `rj${this.chapterId()}, j${this.chapterId()}`;
+            x.doc.body.append(div);
+        }
         return x;
     }
 }

@@ -10,6 +10,7 @@ class XHtml {
         this._settings = settings;
         /**@type {Document}*/
         this.doc = new DOMParser().parseFromString('<?xml version=\'1.0\' encoding=\'utf-8\'?><html xmlns="http://www.w3.org/1999/xhtml"><head/><body/></html>', 'application/xhtml+xml');
+        this._skip_strip = false;
     }
     _strip() {
         let ps = this.doc.getElementsByTagName('p');
@@ -24,7 +25,7 @@ class XHtml {
         return blob;
     }
     to_xhtml() {
-        if (this._settings.strip_in_xhtml_file) {
+        if (!this._skip_strip && this._settings.strip_in_xhtml_file) {
             this._strip();
         }
         return new XMLSerializer().serializeToString(this.doc);

@@ -1,6 +1,7 @@
 const { u8arrcmp } = require('./binary');
 const { browser } = require('./const');
 const { EventPool, MyEvent } = require('./eventpool');
+const { getI18n } = require('./i18n');
 const { QDChapterInfo } = require('./qdchapter_info');
 const { get_settings } = require('./settings')
 
@@ -97,6 +98,26 @@ async function get_latest_chapters_key_by_chapterId(chapter_id) {
     });
 }
 
+/**@type {string | undefined}*/
+let fpScript = undefined;
+
+let observer = new MutationObserver((data) => {
+    for (let i of data) {
+        if (i.type == 'childList') {
+            /**@type {Element}*/
+            let ele = i.target;
+            if (ele.tagName == 'SCRIPT') {
+                if (ele.id == 'fpScript' && fpScript === undefined) {
+                    fpScript = ele.innerHTML;
+                    console.log('fpScript loaded.');
+                }
+            }
+        }
+    }
+})
+
+observer.observe(document, { childList: true, subtree: true });
+
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
     if (request['@type'] == 'get_qdchapter_gdata') {
         let re = { "@type": "qd_chapter_gdata", "ok": true, 'msg': 'ok' }
@@ -116,39 +137,103 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
         return true;
     } else if (request['@type'] == 'get_qdchapter') {
         let data = { "name": "", "contents": [], "words": 0, "uploadTime": "" };
-        let re = { "@type": "qdchapter", "code": 0, data: data };
+        let re = { "@type": "qdchapter", "ok": true, "code": 0, data: data };
         let ci = new QDChapterInfo(request['g_data']);
         if (document.getElementsByClassName('error-text fl').length) {
             re['code'] |= 1;
         } else {
-            let ocols = document.getElementsByClassName('content-wrap');
-            /**@type {Array<HTMLElement>} */
-            let cols = [];
-            for (let i = 0; i < ocols.length; i++) {
-                let p = ocols[i].parentElement;
-                if (p.getAttribute("data-type") == "2") {
-                    cols.push(ocols[i]);
-                }
-            }
-            if (cols.length) {
-                data['name'] = cols[0].innerHTML;
-            } else {
-                re['code'] |= 2;
-            }
-            let max = ci.vipStatus() == 1 && ci.isBuy() == 0 ? cols.length : cols.length - 1;
-            if (ci.vipStatus() == 1 && ci.isBuy() == 0) {
-                // TODO: Add buy status
-            }
-            if (max == 0) {
-                re['code'] |= 2;
+            let cES = ci.chapter_cES();
+            if (cES != 0 && cES != 2) {
+                re['ok'] = false;
+                re['msg'] = getI18n('unknown_protect_type');
+                delete re['data'];
                 sendResponse(re);
                 return true;
             }
-            for (let i = 1; i < max; i++) {
-                let c = cols[i];
-                data['contents'].push(c.innerText);
+            if (cES == 2) {
+                if (fpScript === undefined) {
+                    re['code'] |= 2;
+                    delete re['data'];
+                    sendResponse(re);
+                    return true;
+                }
+                data['fpScript'] = fpScript;
+                let cols = document.getElementById(`j_${ci.chapterId()}`);
+                if (cols === null) {
+                    re['ok'] = false;
+                    re['msg'] = 'Failed to find chapter content.';
+                    delete re['data'];
+                    sendResponse(re);
+                    return true;
+                }
+                if (cols.children.length) {
+                    for (let child of cols.children) {
+                        if (child.tagName == 'P') {
+                            /**@type {HTMLElement}*/
+                            let c = child.cloneNode(true);
+                            /**@type {HTMLElement}*/
+                            let lc = c.lastChild;
+                            if (lc.classList.contains("review-count")) {
+                                c.removeChild(c.lastChild);
+                            }
+                            c.removeAttribute('data-type');
+                            for (let e of c.children) {
+                                let tagName = e.tagName;
+                                if (tagName.endsWith('27')) {
+                                    let ele = document.createElement(tagName.slice(0, tagName.length - 2).toLowerCase());
+                                    ele.innerHTML = e.innerHTML;
+                                    for (let attr of e.getAttributeNames()) {
+                                        let tattr = attr;
+                                        if (attr.endsWith('27')) tattr = attr.slice(0, attr.length - 2);
+                                        ele.setAttribute(tattr, e.getAttribute(attr));
+                                    } 
+                                    e.replaceWith(ele);
+                                }
+                            }
+                            data['contents'].push(c.outerHTML);
+                        }
+                    }
+                } else {
+                    re['code'] |= 2;
+                }
+                let name = document.getElementsByClassName('j_chapterName');
+                if (name.length) {
+                    /**@type {HTMLElement}*/
+                    let ele = name[0].children[0];
+                    data['name'] = ele.innerText;
+                    if (!data['name'].length) {
+                        re['code'] |= 2;
+                    }
+                } else {
+                    re['code'] |= 2;
+                }
+            } else {
+                let ocols = document.getElementsByClassName('content-wrap');
+                /**@type {Array<HTMLElement>} */
+                let cols = [];
+                for (let i = 0; i < ocols.length; i++) {
+                    let p = ocols[i].parentElement;
+                    if (p.getAttribute("data-type") == "2") {
+                        cols.push(ocols[i]);
+                    }
+                }
+                if (cols.length) {
+                    data['name'] = cols[0].innerHTML;
+                } else {
+                    re['code'] |= 2;
+                }
+                let max = ci.vipStatus() == 1 && ci.isBuy() == 0 ? cols.length : cols.length - 1;
+                if (max == 0) {
+                    re['code'] |= 2;
+                    sendResponse(re);
+                    return true;
+                }
+                for (let i = 1; i < max; i++) {
+                    let c = cols[i];
+                    data['contents'].push(c.innerText);
+                }
             }
-            cols = document.getElementsByClassName('j_chapterWordCut');
+            let cols = document.getElementsByClassName('j_chapterWordCut');
             if (cols.length) {
                 try {
                     data['words'] = parseInt(cols[0].innerHTML);
@@ -217,6 +302,10 @@ get_settings().then(settings => {
             if (document.getElementsByClassName('error-text fl').length) {
                 save_to_database_fatal = true;
                 throw new Error('404或其他错误');
+            }
+            if (ci.chapter_cES() != 0) {
+                save_to_database_fatal = true;
+                return;
             }
             let ocols = document.getElementsByClassName('content-wrap');
             /**@type {Array<HTMLElement>} */
