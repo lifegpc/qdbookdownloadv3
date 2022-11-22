@@ -63,5 +63,6 @@
     "unknown_protect_type": { "message": "Unknown protect type." },
     "not_support_preview": { "message": "Preview is not supported due to protect method." },
     "saveFailed": { "message": "Failed to save." },
-    "use_save_as_zip": { "message": "Due to protect, please use Save as a ZIP file." }
+    "use_save_as_zip": { "message": "Due to protect, please use Save as a ZIP file." },
+    "strip_in_xhtml_file_desc": { "message": "This may not works on some protected chapters." }
 }

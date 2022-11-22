@@ -56,6 +56,10 @@ function generate_book_info(data, settings, doc = document) {
     let copyAsTxt = doc.createElement('button');
     copyAsTxt.innerText = getI18n('copyAsTxt');
     copyAsTxt.addEventListener('click', () => {
+        if (data.chapter_cES() == 2) {
+            alert(getI18n('use_save_as_zip'));
+            return;
+        }
         navigator.clipboard.writeText(genText()).catch(() => {
             alert(getI18n('copyFailed'));
         })

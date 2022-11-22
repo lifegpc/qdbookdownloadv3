@@ -34,7 +34,7 @@ class BoolTemplate {
         div.append(title);
         if (this._description.length) {
             div.append(document.createElement('br'));
-            div.append(this.description);
+            div.append(this._description);
         }
         this._select = this._div.querySelector('select');
         this._select.addEventListener('change', () => {

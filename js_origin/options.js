@@ -15,7 +15,7 @@ async function main_handle() {
     let settings = await get_settings();
     /**@type {Array<BoolTemplate>}*/
     let bool_buttons = [];
-    bool_buttons.push(new BoolTemplate('strip_in_xhtml_file', getI18n('strip_in_xhtml_file'), '', settings, false));
+    bool_buttons.push(new BoolTemplate('strip_in_xhtml_file', getI18n('strip_in_xhtml_file'), getI18n('strip_in_xhtml_file_desc'), settings, false));
     bool_buttons.push(new BoolTemplate('add_more_info_to_xhtml', getI18n('add_more_info_to_xhtml'), '', settings, false));
     bool_buttons.push(new BoolTemplate('autosave_to_database', getI18n('autosave_to_database'), '', settings, false));
     bool_buttons.push(new BoolTemplate('autosave_unbuy_chapter', getI18n('autosave_unbuy_chapter'), '', settings, false));
