@@ -153,6 +153,56 @@ async function load_qd_chapter_info(tabId, settings) {
     let qdc = new QDChapterInfo(g_data, data['data']);
     if (qdc.chapter_cES() == 2) {
         qdc._data['fpScript'] = await eval_fpScript(qdc._data['fpScript']);
+        let con = [];
+        /**@type {string | undefined}*/
+        let dt = undefined;
+        let encodeCss = qdc.encodeCss();
+        /**
+         * @param {string} tagName 
+         */
+        function detect_dt(tagName) {
+            let otagName = tagName;
+            while (tagName.length) {
+                tagName = tagName.slice(0, tagName.length - 1);
+                if (encodeCss.indexOf(tagName) != -1) {
+                    let dt = otagName.replace(tagName, '');
+                    console.log('Detect end tag:', dt);
+                    return dt;
+                }
+            }
+        }
+        for (let t of qdc.contents()) {
+            let a = document.createElement('p');
+            a.innerHTML = t;
+            let c = a.children[0];
+            for (let e of c.children) {
+                let tagName = e.tagName.toLowerCase();
+                if (dt === undefined) {
+                    dt = detect_dt(tagName);
+                } else {
+                    if (!tagName.endsWith(dt)) continue;
+                }
+                let ele = document.createElement(tagName.slice(0, tagName.length - (dt === undefined ? 0 : dt.length)).toLowerCase());
+                ele.innerHTML = e.innerHTML;
+                for (let attr of e.getAttributeNames()) {
+                    let tattr = attr;
+                    if (["class"].indexOf(attr) != -1) {
+                        if (dt === undefined) {
+                            dt = detect_dt(attr);
+                            tattr = attr.slice(0, attr.length - (dt === undefined ? 0 : dt.length));
+                        } else {
+                            if (tagName.endsWith(dt)) {
+                                tattr = attr.slice(0, attr.length - dt.length);
+                            }
+                        }
+                    }
+                    ele.setAttribute(tattr, e.getAttribute(attr));
+                }
+                e.replaceWith(ele);
+            }
+            con.push(a.innerHTML);
+        }
+        qdc._data['contents'] = con;
     }
     console.log('Current chapter:', qdc);
     document.getElementById('main').append(generate_book_info(qdc, settings));

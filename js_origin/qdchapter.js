@@ -177,19 +177,6 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
                                 c.removeChild(c.lastChild);
                             }
                             c.removeAttribute('data-type');
-                            for (let e of c.children) {
-                                let tagName = e.tagName;
-                                if (tagName.endsWith('27')) {
-                                    let ele = document.createElement(tagName.slice(0, tagName.length - 2).toLowerCase());
-                                    ele.innerHTML = e.innerHTML;
-                                    for (let attr of e.getAttributeNames()) {
-                                        let tattr = attr;
-                                        if (attr.endsWith('27')) tattr = attr.slice(0, attr.length - 2);
-                                        ele.setAttribute(tattr, e.getAttribute(attr));
-                                    } 
-                                    e.replaceWith(ele);
-                                }
-                            }
                             data['contents'].push(c.outerHTML);
                         }
                     }
