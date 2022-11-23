@@ -39,6 +39,14 @@ function getExtensionTabs(discarded = undefined) {
     return browser['tabs']['query'](params);
 }
 
+/**
+ * @param {number} tabId
+ * @param {boolean} bypassCache Whether to bypass local caching.
+ */
+async function reloadTab(tabId, bypassCache = false) {
+    return browser['tabs']['reload'](tabId, { 'bypassCache': bypassCache });
+}
+
 async function waitTabLoaded(tabId) {
     return new Promise((resolve, reject) => {
         let timer = setInterval(() => {
@@ -55,4 +63,4 @@ async function waitTabLoaded(tabId) {
     })
 }
 
-module.exports = { connectTab, getCurrentTabs, getCurrentTab, getExtensionTabs, waitTabLoaded }
+module.exports = { connectTab, getCurrentTabs, getCurrentTab, getExtensionTabs, reloadTab, waitTabLoaded }

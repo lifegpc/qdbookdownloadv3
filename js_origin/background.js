@@ -1,6 +1,6 @@
 const { browser } = require('./const');
 const { MyEvent, EventPool } = require('./eventpool');
-const { connectTab, getExtensionTabs, waitTabLoaded } = require('./tabs');
+const { connectTab, getExtensionTabs, waitTabLoaded, reloadTab } = require('./tabs');
 
 let current_port = undefined;
 let ep = new EventPool();
@@ -23,9 +23,17 @@ function add_port_listener() {
 async function get_new_port(allow_create_tab = true) {
     let tabs = await getExtensionTabs();
     for (let tab of tabs) {
-        if (tab['url'] && tab['discarded'] === false) {
+        if (tab['url']) {
             let url = new URL(tab['url']);
             if (url.pathname == '/manage.html' || url.pathname == '/forepage.html') {
+                if (tab['discarded'] !== false) {
+                    if (url.pathname == '/forepage.html') {
+                        await reloadTab(tab['id'], true);
+                        await waitTabLoaded(tab['id']);
+                    } else {
+                        continue;
+                    }
+                }
                 try {
                     let port = connectTab(tab['id'], { 'name': 'sandbox' });
                     if (port !== undefined) {
