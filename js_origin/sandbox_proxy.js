@@ -25,7 +25,8 @@ function connect_handler(port) {
         } else if (typ == 'qd_save_chapter') {
             let chapter = new QDChapterInfo(m['g_data'], m['data']);
             let re = { '@type': 'qd_save_chapter', 'ok': true, 'rand': m['rand'] }
-            indexeddb_qd.save_chapter(chapter).then(() => {
+            let time = m['time'];
+            indexeddb_qd.save_chapter(chapter, time !== undefined ? new Date(time) : undefined).then(() => {
                 p['postMessage'](re);
             }).catch(e => {
                 console.warn("Failed to save chapter:", e);

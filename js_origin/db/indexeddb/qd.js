@@ -15,7 +15,7 @@ function init() {
             resolve();
             return;
         }
-        let indexedReq = indexedDB.open('qd', 2);
+        let indexedReq = indexedDB.open('qd', 3);
         /**@param {IDBVersionChangeEvent} event*/
         indexedReq.onupgradeneeded = function (event) {
             let db = this.result;
@@ -32,6 +32,12 @@ function init() {
                 let chapters = txn.objectStore('chapters');
                 chapters.createIndex('bookId', 'bookId');
                 chapters.createIndex('id', 'id');
+            }
+            if (isNaN(event.oldVersion) || event.oldVersion < 3) {
+                /**@type {IDBTransaction} */
+                let txn = event.target['transaction'];
+                let chapters = txn.objectStore('chapters');
+                chapters.createIndex('eid', 'eid');
             }
         }
         indexedReq.onsuccess = () => {
@@ -119,7 +125,7 @@ function delete_chapter(key) {
                 blen = key.length;
                 for (let k of key) {
                     delete_idb_data('chapters', k).then(resolve_function).catch(reject_function);
-                } 
+                }
             } else {
                 delete_idb_data('chapters', key).then(resolve).catch(reject);
             }
@@ -347,16 +353,19 @@ function get_chatper(key) {
 /**
  * Save chapter into database
  * @param {QDChapterInfo} info Chapter information
+ * @param {Date | undefined} time
  */
-function save_chapter(info) {
+function save_chapter(info, time = undefined) {
     return new Promise((resolve, reject) => {
         init().then(() => {
             let data = info.toJson();
             let sdata = JSON.stringify(data);
-            let t = new Date();
+            let t = time !== undefined ? time : new Date();
             let h = info.get_hash();
             quick_compress(sdata).then((data) => {
                 let d = { "data": data, "compressed": true, "bookId": info.bookId(), "id": info.chapterId(), 'time': t, 'hash': h };
+                let eid = info.encodedChapterId();
+                if (eid !== undefined) d['eid'] = eid;
                 set_idb_data('chapters', d).then(resolve).catch(reject);
             }).catch(e => {
                 console.warn(e);
@@ -365,6 +374,8 @@ function save_chapter(info) {
                 data['id'] = info.chapterId();
                 data['time'] = t;
                 data['hash'] = h;
+                let eid = info.encodedChapterId();
+                if (eid !== undefined) data['eid'] = eid;
                 set_idb_data('chapters', data).then(resolve).catch(reject);
             })
         })

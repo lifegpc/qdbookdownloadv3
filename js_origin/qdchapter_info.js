@@ -38,6 +38,10 @@ class QDChapterInfo {
     chapterId() {
         return this._g_data["chapter"]["id"];
     }
+    /**@returns {string | undefined} */
+    encodedChapterId() {
+        return this._data['eid'];
+    }
     /**@returns {number}*/
     vipStatus() {
         return this._g_data["chapter"]["vipStatus"];

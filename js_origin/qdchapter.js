@@ -3,7 +3,8 @@ const { browser } = require('./const');
 const { EventPool, MyEvent } = require('./eventpool');
 const { getI18n } = require('./i18n');
 const { QDChapterInfo } = require('./qdchapter_info');
-const { get_settings } = require('./settings')
+const { get_settings } = require('./settings');
+const { split_filename } = require('./zip/utils');
 
 function get_g_data() {
     let cols = document.getElementsByTagName('script');
@@ -220,6 +221,11 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
                     data['contents'].push(c.innerText);
                 }
             }
+            if (!ci.vipStatus()) {
+                let url_path = split_filename(new URL(window.location.href).pathname);
+                let eid = url_path[url_path.length - 1];
+                data['eid'] = eid;
+            }
             let cols = document.getElementsByClassName('j_chapterWordCut');
             if (cols.length) {
                 try {
@@ -245,10 +251,13 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
 
 /**
  * @param {QDChapterInfo} chapter
+ * @param {Date | undefined} time
  */
-async function save_chapter(chapter) {
+async function save_chapter(chapter, time) {
     return request_with_port('qd_save_chapter', (port, rand) => {
-        port['postMessage']({ '@type': 'qd_save_chapter', 'data': chapter._data, 'g_data': chapter._g_data, 'rand': rand });
+        let d = { '@type': 'qd_save_chapter', 'data': chapter._data, 'g_data': chapter._g_data, 'rand': rand };
+        if (time !== undefined) d['time'] = time;
+        port['postMessage'](d);
     }, () => { });
 }
 
@@ -312,6 +321,11 @@ get_settings().then(settings => {
             if (ci.vipStatus() == 1 && ci.isBuy() == 0 && !settings.autosave_unbuy_chapter) {
                 return;
             }
+            if (!ci.vipStatus()) {
+                let url_path = split_filename(new URL(window.location.href).pathname);
+                let eid = url_path[url_path.length - 1];
+                data['eid'] = eid;
+            }
             if (max > 0) {
                 for (let i = 1; i < max; i++) {
                     let c = cols[i];
@@ -342,10 +356,12 @@ get_settings().then(settings => {
                     console.log('Saved chapter to database.');
                 } else {
                     let old = await get_chapter(key);
-                    if (u8arrcmp(old.get_hash(), ci.get_hash())) {
+                    let data_matched = u8arrcmp(old.get_hash(), ci.get_hash());
+                    let eid_matched = old.encodedChapterId() === ci.encodedChapterId();
+                    if (data_matched && eid_matched) {
                         console.log('Chapter not changed, skip save to database.');
                     } else {
-                        await save_chapter(ci);
+                        await save_chapter(ci, (data_matched && !eid_matched) ? key[2] : undefined);
                         console.log('Saved chapter to database.');
                     }
                 }

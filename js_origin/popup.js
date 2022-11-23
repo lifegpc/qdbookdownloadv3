@@ -93,8 +93,8 @@ function generate_book_info(data, settings, doc = document) {
     d.append(saveAsXhtml);
     let saveToDatabase = doc.createElement('button');
     saveToDatabase.innerText = getI18n('saveToDatabase');
-    function save_to_database() {
-        indexeddb_qd.save_chapter(data).then(() => { alert(getI18n('save_ok')) }).catch(e => { console.error(e); });
+    function save_to_database(key = undefined) {
+        indexeddb_qd.save_chapter(data, key).then(() => { alert(getI18n('save_ok')) }).catch(e => { console.error(e); });
     }
     saveToDatabase.addEventListener('click', () => {
         indexeddb_qd.get_latest_chapters_key_by_chapterId(data.chapterId()).then(key => {
@@ -102,9 +102,11 @@ function generate_book_info(data, settings, doc = document) {
             if (key) {
                 indexeddb_qd.get_chatper(key).then(chapter => {
                     console.log('Latest chapter:', chapter);
-                    let confirmed = !u8arrcmp(chapter.get_hash(), data.get_hash()) || confirm(`${getI18n('chapter_already_exists_in_db')}${getI18n('ask_continue')}`);
+                    let data_nonmatch = !u8arrcmp(chapter.get_hash(), data.get_hash());
+                    let eid_nonmatch = chapter.encodedChapterId() !== data.encodedChapterId();
+                    let confirmed = data_nonmatch || eid_nonmatch || confirm(`${getI18n('chapter_already_exists_in_db')}${getI18n('ask_continue')}`);
                     if (confirmed) {
-                        save_to_database();
+                        save_to_database((!data_nonmatch && eid_nonmatch) ? key[2] : undefined);
                     }
                 })
             } else {
