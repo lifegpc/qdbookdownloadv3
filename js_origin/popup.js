@@ -165,7 +165,10 @@ async function load_qd_chapter_info(tabId, settings) {
             while (tagName.length) {
                 tagName = tagName.slice(0, tagName.length - 1);
                 if (encodeCss.indexOf(tagName) != -1) {
-                    let dt = otagName.replace(tagName, '');
+                    let dt = otagName.slice(tagName.length);
+                    if (!dt.match(/^[0-9]+$/)) {
+                        break;
+                    }
                     console.log('Detect end tag:', dt);
                     return dt;
                 }

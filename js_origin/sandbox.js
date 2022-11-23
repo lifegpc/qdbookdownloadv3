@@ -13,6 +13,7 @@ const compress = require('./compress');
         }
         re.push(data);
     }
+    console.log('fpScript:', re);
     let fpData = eval(`(function(){var window={};${re.join('\n')};return window;})()`);
     if (fpData.hasOwnProperty('cContent')) {
         delete fpData['cContent'];
