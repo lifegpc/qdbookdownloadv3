@@ -3,18 +3,10 @@ const compress = require('./compress');
 /**
  * @param {string} fpScript 
  */
- function eval_fpScript(fpScript) {
-    let datas = fpScript.split('\n');
-    let re = [];
-    for (let data of datas) {
-        data = data.trim();
-        if (data.startsWith('var el') || data.startsWith('el.')) {
-            continue
-        }
-        re.push(data);
-    }
+function eval_fpScript(fpScript) {
+    let re = `(function(){var window={};{let d = document.createElement('div');d.id="fpScript";document.body.append(d);};${fpScript};return window;})()`;
     console.log('fpScript:', re);
-    let fpData = eval(`(function(){var window={};${re.join('\n')};return window;})()`);
+    let fpData = eval(re);
     if (fpData.hasOwnProperty('cContent')) {
         delete fpData['cContent'];
     }
