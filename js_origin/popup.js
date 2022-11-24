@@ -120,8 +120,8 @@ function generate_book_info(data, settings, doc = document) {
     async function save_as_zip() {
         let zip = new Zip();
         let encoder = new TextEncoder();
-        if (!data.chapter_cES()) zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`, encoder.encode(genText()));
-        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`, encoder.encode((await data.toXhtml(settings, (filename, data) => {
+        if (!data.chapter_cES()) zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`.replace('/', '_'), encoder.encode(genText()));
+        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`.replace('/', '_'), encoder.encode((await data.toXhtml(settings, (filename, data) => {
             zip.add_file(filename, data);
         })).to_xhtml()));
         let blob = await zip._toBlob({ 'type': 'application/zip' });
@@ -191,7 +191,7 @@ async function load_qd_chapter_info(tabId, settings) {
                 ele.innerHTML = e.innerHTML;
                 for (let attr of e.getAttributeNames()) {
                     let tattr = attr;
-                    if (["class"].indexOf(attr) != -1) {
+                    if (["class"].indexOf(attr) == -1) {
                         if (dt === undefined) {
                             dt = detect_dt(attr);
                             tattr = attr.slice(0, attr.length - (dt === undefined ? 0 : dt.length));
