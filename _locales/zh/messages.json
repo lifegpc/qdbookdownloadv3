@@ -49,5 +49,6 @@
     "not_support_preview": { "message": "由于受到保护，无法显示预览。" },
     "saveFailed": { "message": "保存失败。" },
     "use_save_as_zip": { "message": "由于受到保护，请使用保存为ZIP文件。" },
-    "strip_in_xhtml_file_desc": { "message": "在部分受到保护的章节上可能无效。" }
+    "strip_in_xhtml_file_desc": { "message": "在部分受到保护的章节上可能无效。" },
+    "no_data_in_db": { "message": "数据库中找不到数据。" }
 }

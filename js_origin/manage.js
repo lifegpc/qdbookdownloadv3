@@ -2,6 +2,7 @@ const { browser } = require('./const');
 const { getI18n } = require('./i18n');
 const { gen_main_list } = require('./manage/main_list');
 const { get_params_info, QIDIAN_TYPE, UNKNOWN_TYPE } = require('./manage/params');
+const qd_book = require('./manage/qd_book');
 const qd_book_list = require('./manage/qd_book_list');
 const { get_page_params, change_page_params } = require('./params');
 const connect_handler = require('./sandbox_proxy');
@@ -49,6 +50,9 @@ async function init() {
         if (bookId === null) {
             let list = await qd_book_list.gen_book_list();
             main.append(list);
+        } else {
+            let book = await qd_book.gen_qd_book(bookId);
+            main.append(book);
         }
     } else if (type == UNKNOWN_TYPE) {
         let list = gen_main_list();

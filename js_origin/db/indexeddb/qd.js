@@ -136,7 +136,7 @@ function delete_chapter(key) {
 /**
  * Get book info from database
  * @param {number} bookId
- * @returns {Promise<QDBookInfo>}
+ * @returns {Promise<QDBookInfo | undefined>}
  */
 function get_book_info(bookId) {
     return new Promise((resolve, reject) => {
@@ -145,7 +145,7 @@ function get_book_info(bookId) {
             let store = tx.objectStore('books');
             let req = store.get(bookId);
             req.onsuccess = () => {
-                resolve(req.result === undefined ? QDBookInfo.fromJson(req.result) : undefined);
+                resolve(req.result !== undefined ? QDBookInfo.fromJson(req.result) : undefined);
             }
             req.onerror = () => {
                 need_reinit = true;
