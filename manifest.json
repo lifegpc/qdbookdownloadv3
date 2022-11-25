@@ -52,7 +52,10 @@
             "sandbox.html"
         ]
     },
-    "options_page": "options.html",
+    "options_ui": { 
+        "open_in_tab": true,
+        "page": "options.html"
+    },
     "background": {
         "service_worker": "js/background.js"
     }
