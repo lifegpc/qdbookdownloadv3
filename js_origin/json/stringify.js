@@ -1,5 +1,8 @@
 const { BASE_MAP } = require('./const');
 
+/**
+ * @param {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>} m
+ */
 function stringify2(data, m) {
     let typ = typeof data;
     if (typ == "object") {
@@ -17,7 +20,9 @@ function stringify2(data, m) {
                     }
                 }
                 if (is_data2) {
-                    arr.push({ '@type': data_type2, 'data': stringify2(m[data_type2][1](d), m) });
+                    let dd = m[data_type2][1](d);
+                    let skip_stringify = m[data_type2][3] || false;
+                    arr.push({ '@type': data_type2, 'data': skip_stringify ? dd : stringify2(dd, m) });
                 } else {
                     arr.push(d);
                 }
@@ -34,7 +39,9 @@ function stringify2(data, m) {
             }
         }
         if (is_data) {
-            return { '@type': data_type, 'data': stringify2(m[data_type][1](data), m) };
+            let d = m[data_type][1](data);
+            let skip_stringify = m[data_type][3] || false;
+            return { '@type': data_type, 'data': skip_stringify ? d : stringify2(d, m) };
         }
         let obj = {};
         let keys2 = Object.getOwnPropertyNames(data);
@@ -46,9 +53,14 @@ function stringify2(data, m) {
     return data;
 }
 
-function stringify(data, map = {}) {
+/**
+ * @param {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>} map
+ * @param {boolean} skip_stringify if true, skip JSON.stringify
+ */
+function stringify(data, map = {}, skip_stringify = false) {
     let m = Object.assign({}, map, BASE_MAP);
-    return JSON.stringify(stringify2(data, m));
+    let d = stringify2(data, m);
+    return skip_stringify ? d : JSON.stringify(d);
 }
 
 module.exports = stringify;

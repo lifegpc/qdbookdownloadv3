@@ -1,5 +1,8 @@
 const { BASE_MAP } = require('./const');
 
+/**
+ * @param {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>} m
+ */
 function parse2(data, m) {
     let typ = typeof data;
     if (typ == "object") {
@@ -16,7 +19,9 @@ function parse2(data, m) {
         if (data['@type'] != undefined) {
             let type = data['@type'];
             let d = data['data'];
-            return m[type][2](parse2(d, m));
+            let p = m[type][2] || ((data) => new m[type][0](data));
+            let skip_parse = m[type][4] || false;
+            return p(skip_parse ? d : parse2(d, m));
         }
         let obj = {};
         let keys = Object.getOwnPropertyNames(data);
@@ -29,11 +34,12 @@ function parse2(data, m) {
 }
 
 /**
- * @param {string} data
+ * @param {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>} map
+ * @param {boolean} skip_parse if true, skip JSON.parse
  **/
-function parse(data, map = {}) {
+function parse(data, map = {}, skip_parse = false) {
     let m = Object.assign({}, map, BASE_MAP);
-    return parse2(JSON.parse(data), m);
+    return parse2(skip_parse ? data : JSON.parse(data), m);
 }
 
 module.exports = parse;
