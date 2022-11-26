@@ -4,6 +4,7 @@ const { QDChapterInfo } = require('../../qdchapter_info');
 const { quick_compress, quick_uncompress_with_decode } = require('../../messages');
 const { arrayBufferToHex, u8arrcmp } = require('../../binary');
 const stringify = require('../../json/stringify');
+const parse = require('../../json/parse');
 
 /**@type {IDBDatabase}*/
 let db = undefined;
@@ -333,7 +334,7 @@ function get_chatper(key) {
                 if (result !== undefined) {
                     if (result['compressed']) {
                         quick_uncompress_with_decode(result['data']).then(data => {
-                            let obj = JSON.parse(data);
+                            let obj = parse(data);
                             check_result(QDChapterInfo.fromJson(obj));
                         })
                     } else {
