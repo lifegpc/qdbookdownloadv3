@@ -1,8 +1,11 @@
+const parse = require('./json/parse');
+const stringify = require('./json/stringify');
+
 function structuredClone(value, transfer) {
     if (globalThis["structuredClone"]) {
         return globalThis["structuredClone"](value, transfer);
     } else {
-        return JSON.parse(JSON.stringify(value));
+        return parse(stringify(value));
     }
 }
 

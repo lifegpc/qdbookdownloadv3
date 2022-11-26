@@ -3,6 +3,7 @@ const { QDBookInfo } = require('../../qdbook_info');
 const { QDChapterInfo } = require('../../qdchapter_info');
 const { quick_compress, quick_uncompress_with_decode } = require('../../messages');
 const { arrayBufferToHex, u8arrcmp } = require('../../binary');
+const stringify = require('../../json/stringify');
 
 /**@type {IDBDatabase}*/
 let db = undefined;
@@ -359,7 +360,7 @@ function save_chapter(info, time = undefined) {
     return new Promise((resolve, reject) => {
         init().then(() => {
             let data = info.toJson();
-            let sdata = JSON.stringify(data);
+            let sdata = stringify(data);
             let t = time !== undefined ? time : new Date();
             let h = info.get_hash();
             quick_compress(sdata).then((data) => {
