@@ -102,9 +102,14 @@ function generate_book_info(data, settings, doc = document) {
             if (key) {
                 indexeddb_qd.get_chatper(key).then(chapter => {
                     console.log('Latest chapter:', chapter);
+                    let is_protected = false;
                     let data_nonmatch = !u8arrcmp(chapter.get_hash(), data.get_hash());
+                    if (chapter.chapter_cES() == 2 && data.chapter_cES() == 2) {
+                        data_nonmatch = false;
+                        is_protected = true;
+                    }
                     let eid_nonmatch = chapter.encodedChapterId() !== data.encodedChapterId();
-                    let confirmed = data_nonmatch || eid_nonmatch || confirm(`${getI18n('chapter_already_exists_in_db')}${getI18n('ask_continue')}`);
+                    let confirmed = data_nonmatch || eid_nonmatch || confirm(`${getI18n('chapter_already_exists_in_db')}${is_protected ? getI18n('chapter_protected_nonmatch') : ""}${getI18n('ask_continue')}`);
                     if (confirmed) {
                         save_to_database((!data_nonmatch && eid_nonmatch) ? key[2] : undefined);
                     }
