@@ -236,6 +236,7 @@ async function load_qd_book_info(tabId, settings) {
         alert(data['msg']);
         return;
     }
+    console.log('Book data:', data['data']);
     let book = new QDBookInfo(g_data, data['data']);
     console.log('Current book:', book);
 }

@@ -1,5 +1,7 @@
 const { browser } = require('./const');
 const { getI18n } = require('./i18n');
+const stringify = require('./json/stringify');
+const { QDBookTag, QDBookInfo } = require('./qdbook_info');
 const { split_filename } = require('./zip/utils');
 
 function get_g_data() {
@@ -28,6 +30,26 @@ function get_book_img() {
     filenames.pop();
     url.pathname = filenames.join('/');
     return url.toString();
+}
+
+function get_book_tags() {
+    let eles = document.querySelectorAll('.book-information.cf > .book-info > .tag');
+    if (!eles.length) return null;
+    /**@type {HTMLElement}*/
+    let ele = eles[0];
+    let tags = [];
+    for (let e of ele.children) {
+        /**@type {HTMLElement}*/
+        let e2 = e;
+        let tag = e2.innerText.trim();
+        let is_status_tag = e2.classList.contains('blue');
+        let url = undefined;
+        if (e2.tagName === 'A') {
+            url = e2.href;
+        }
+        tags.push(new QDBookTag(tag, is_status_tag, url));
+    }
+    return tags;
 }
 
 function get_book_name() {
@@ -66,7 +88,9 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
             let data = {};
             data["img"] = get_book_img();
             data["name"] = get_book_name();
-            re['data'] = data;
+            data["tags"] = get_book_tags();
+            let ndata = stringify(data, QDBookInfo.get_json_map(), true, true);
+            re['data'] = ndata;
         }
         sendResponse(re);
         return true;

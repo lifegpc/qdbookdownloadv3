@@ -1,9 +1,39 @@
 const { structuredClone } = require('./clone');
+const parse = require('./json/parse');
+const stringify = require('./json/stringify');
+
+class QDBookTag {
+    /**
+     * Book tag
+     * @param {string} name tag name
+     * @param {boolean} is_status_tag is a status tag
+     * @param {string | undefined} url tag url
+     */
+    constructor(name, is_status_tag, url = undefined) {
+        /**@type {string} tag name*/
+        this._name = name;
+        /**@type {boolean} is a status tag*/
+        this._is_status_tag = is_status_tag;
+        /**@type {string | undefined} tag url*/
+        this._url = url;
+    }
+    toJson() {
+        let o = { "name": this._name, "type": this._is_status_tag };
+        if (this._url !== undefined) {
+            o['url'] = this._url;
+        }
+        return structuredClone(o)
+    }
+
+    static fromJson(data) {
+        return new QDBookTag(data['name'], data['type'], data['url']);
+    }
+}
 
 class QDBookInfo {
     constructor(g_data, data) {
         this._g_data = g_data;
-        this._data = data;
+        this._data = parse(data, QDBookInfo.get_json_map(), true);
     }
     /**@returns {number}*/
     bookId() {
@@ -49,11 +79,20 @@ class QDBookInfo {
         return this.isWebSiteType() == 1 ? getI18n('qidian') : getI18n('qidianwomen');
     }
     toJson() {
-        return structuredClone({ "g_data": this._g_data, "data": this._data });
+        let o = structuredClone({ "g_data": this._g_data, "data": this._data });
+        return stringify(o, QDBookInfo.get_json_map(), true, true);
     }
     static fromJson(json) {
-        return new QDBookInfo(json['g_data'], json["data"]);
+        let obj = parse(json, QDBookInfo.get_json_map(), true)
+        return new QDBookInfo(obj['g_data'], obj["data"]);
+    }
+    /**@returns {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>}*/
+    static get_json_map() {
+        return {
+            'QDBookTag': [QDBookTag,
+            /**@param {QDBookTag} d*/ (d) => d.toJson(), QDBookTag.fromJson, true, true]
+        }
     }
 }
 
-module.exports = { QDBookInfo };
+module.exports = { QDBookTag, QDBookInfo };

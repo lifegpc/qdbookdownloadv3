@@ -56,9 +56,10 @@ function stringify2(data, m) {
 /**
  * @param {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>} map
  * @param {boolean} skip_stringify if true, skip JSON.stringify
+ * @param {boolean} skip_base_map if true, skip BASE_MAP
  */
-function stringify(data, map = {}, skip_stringify = false) {
-    let m = Object.assign({}, map, BASE_MAP);
+function stringify(data, map = {}, skip_stringify = false, skip_base_map = false) {
+    let m = skip_base_map ? map : Object.assign({}, map, BASE_MAP);
     let d = stringify2(data, m);
     return skip_stringify ? d : JSON.stringify(d);
 }
