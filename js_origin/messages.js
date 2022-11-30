@@ -60,6 +60,16 @@ function getQdBookGdata(tabId) {
     let p = browser['tabs']['sendMessage'](tabId, { '@type': 'get_qdbook_gdata' });
     return p;
 }
+/**
+ * @param {number} tabId Tab id
+ * @param g_data Global data
+ * @returns {Promise<any>} data
+ */
+function getQDBook(tabId, g_data) {
+    /**@type {Promise<any>} data*/
+    let p = browser['tabs']['sendMessage'](tabId, { '@type': 'get_qdbook', 'g_data': g_data });
+    return p;
+}
 
 /**
  * @param {Uint8Array | string} data Data. If it is a string, will encoding it with UTF-8.
@@ -185,6 +195,7 @@ async function quick_uncompress_with_decode(data, length, encoding) {
 }
 
 module.exports = {
+    getQDBook,
     getQdBookGdata,
     getQdChapter,
     getQdChapterGdata,

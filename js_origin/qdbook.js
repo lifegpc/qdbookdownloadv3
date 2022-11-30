@@ -1,5 +1,6 @@
 const { browser } = require('./const');
 const { getI18n } = require('./i18n');
+const { split_filename } = require('./zip/utils');
 
 function get_g_data() {
     let cols = document.getElementsByTagName('script');
@@ -12,19 +13,35 @@ function get_g_data() {
 }
 
 function get_trimed_err_msg() {
-    let ele = document.getElementsByClassName('error-text fl')[0];
-    let s = ele.textContent.split('\n');
-    let i = 0;
-    for (i = 0; i < s.length; i++) {
-        s[i] = s[i].trim();
-    }
-    return s.join('\n');
+    let eles = document.getElementsByClassName('error-wrap-new cf')[0].getElementsByTagName('h1');
+    if (!eles.length) return "";
+    return eles[0].innerText.trim();
+}
+
+function get_book_img() {
+    let eles = document.querySelectorAll('.book-information.cf .book-img');
+    if (!eles.length) return null;
+    let imgs = eles[0].getElementsByTagName('img');
+    if (!imgs.length) return null;
+    let url = new URL(imgs[0].src);
+    let filenames = split_filename(url.pathname);
+    filenames.pop();
+    url.pathname = filenames.join('/');
+    return url.toString();
+}
+
+function get_book_name() {
+    let eles = document.querySelectorAll('.book-information.cf > .book-info > h1 > em');
+    if (!eles.length) return null;
+    /**@type {HTMLElement}*/
+    let ele = eles[0];
+    return ele.innerText.trim();
 }
 
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
     if (request['@type'] == 'get_qdbook_gdata') {
-        let re = {"@type": "qdbook_gdata", "ok": true, 'msg': 'ok'}
-        if (document.getElementsByClassName('error-text fl').length) {
+        let re = { "@type": "qdbook_gdata", "ok": true, 'msg': 'ok' }
+        if (document.getElementsByClassName('error-wrap-new cf').length) {
             re['ok'] = false;
             re['msg'] = getI18n('error_occured') + get_trimed_err_msg();
         } else {
@@ -35,6 +52,21 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
             } else {
                 re['g_data'] = g_data;
             }
+        }
+        sendResponse(re);
+        return true;
+    }
+    if (request['@type'] == 'get_qdbook') {
+        let re = { "@type": "qdbook", "ok": true };
+        if (document.getElementsByClassName('error-wrap-new cf').length) {
+            re['ok'] = false;
+            re['msg'] = getI18n('error_occured') + get_trimed_err_msg();
+        } else {
+            let g_data = request['g_data'];
+            let data = {};
+            data["img"] = get_book_img();
+            data["name"] = get_book_name();
+            re['data'] = data;
         }
         sendResponse(re);
         return true;

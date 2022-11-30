@@ -1,4 +1,4 @@
-const { getQdBookGdata, getQdChapterGdata, getQdChapter } = require('./messages');
+const { getQDBook, getQdBookGdata, getQdChapterGdata, getQdChapter } = require('./messages');
 const { getCurrentTab } = require('./tabs');
 const { eval_gdata, eval_fpScript } = require('./eval');
 const match_urls = require('./match_urls');
@@ -10,6 +10,7 @@ const indexeddb_qd = require('./db/indexeddb/qd');
 const { u8arrcmp } = require('./binary');
 const { Zip } = require('./zip/file');
 const { ZIP_STORED } = require('./zip/const');
+const { QDBookInfo } = require('./qdbook_info');
 
 /**
  * @param {QDChapterInfo} data Chapter info
@@ -225,10 +226,18 @@ async function load_qd_chapter_info(tabId, settings) {
 async function load_qd_book_info(tabId, settings) {
     let g_data = await getQdBookGdata(tabId);
     if (!g_data['ok']) {
-        throw new Error(g_data['msg']);
+        alert(g_data['msg']);
+        return;
     }
     g_data = g_data['g_data'];
     g_data = await eval_gdata(g_data);
+    let data = await getQDBook(tabId, g_data);
+    if (!data['ok']) {
+        alert(data['msg']);
+        return;
+    }
+    let book = new QDBookInfo(g_data, data['data']);
+    console.log('Current book:', book);
 }
 
 async function basic_handle() {

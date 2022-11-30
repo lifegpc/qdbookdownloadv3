@@ -122,7 +122,7 @@ observer.observe(document, { childList: true, subtree: true });
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
     if (request['@type'] == 'get_qdchapter_gdata') {
         let re = { "@type": "qd_chapter_gdata", "ok": true, 'msg': 'ok' }
-        if (document.getElementsByClassName('error-text fl').length) {
+        if (document.getElementsByClassName('error-wrap-new cf').length) {
             re['ok'] = false;
             re['msg'] = '404或其他错误'
         } else {
@@ -140,7 +140,7 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
         let data = { "name": "", "contents": [], "words": 0, "uploadTime": "" };
         let re = { "@type": "qdchapter", "ok": true, "code": 0, data: data };
         let ci = new QDChapterInfo(request['g_data']);
-        if (document.getElementsByClassName('error-text fl').length) {
+        if (document.getElementsByClassName('error-wrap-new cf').length) {
             re['code'] |= 1;
         } else {
             let cES = ci.chapter_cES();
@@ -295,7 +295,7 @@ get_settings().then(settings => {
             let g_data = await get_evaled_gdata();
             let data = { "name": "", "contents": [], "words": 0, "uploadTime": "" }
             let ci = new QDChapterInfo(g_data);
-            if (document.getElementsByClassName('error-text fl').length) {
+            if (document.getElementsByClassName('error-wrap-new cf').length) {
                 save_to_database_fatal = true;
                 throw new Error('404或其他错误');
             }
