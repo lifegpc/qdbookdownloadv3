@@ -160,6 +160,27 @@ class Settings {
             return undefined;
         }
     }
+    /**@returns {number | undefined}*/
+    _get_int(key) {
+        let data = this._data[key];
+        let type = typeof data;
+        if (type == "number") {
+            return data;
+        } else if (type == "string") {
+            let v = parseInt(data);
+            if (isNaN(v)) {
+                throw new Error(`${data} is not a number`);
+            }
+            this._data[key] = v;
+            return v;
+        } else {
+            if (this._data.hasOwnProperty(key)) {
+                delete this._data[key];
+                this._need_save = true;
+            }
+            return undefined;
+        }
+    }
     _set_bool(key, value) {
         let origin = this._data[key];
         let type = typeof value;
@@ -178,6 +199,27 @@ class Settings {
             }
         } else {
             throw new Error(`${value} is not a boolean value`);
+        }
+        this._need_save = this._need_save || (origin != this._data[key]);
+    }
+    _set_int(key, value, allow_undefined = false) {
+        let origin = this._data[key];
+        if (allow_undefined && value === undefined) {
+            this._data[key] = undefined;
+            this._need_save = this._need_save || (origin != this._data[key]);
+            return;
+        }
+        let type = typeof value;
+        if (type == "number") {
+            this._data[key] = value;
+        } else if (type == "string") {
+            let v = parseInt(value);
+            if (isNaN(v)) {
+                throw new Error(`${value} is not a number`);
+            }
+            this._data[key] = v;
+        } else {
+            throw new Error(`${value} is not a number`);
         }
         this._need_save = this._need_save || (origin != this._data[key]);
     }
@@ -227,6 +269,12 @@ class Settings {
     set autosave_unbuy_chapter(value) {
         return this._set_bool("autosave_unbuy_chapter", value);
     }
+    get last_connected_sandbox() {
+        return this._get_int("last_connected_sandbox");
+    }
+    set last_connected_sandbox(value) {
+        return this._set_int("last_connected_sandbox", value, true);
+    }
     /**@type {string}*/
     get version() {
         return this._data["version"];
@@ -247,4 +295,21 @@ async function get_settings() {
     return s;
 }
 
-module.exports = { CUR_VERSION, Version, Settings, get_settings }
+async function get_local_settings() {
+    let local = browser["storage"]["local"];
+    let data = await local["get"]();
+    let s = new Settings(data, "local");
+    await s._validate();
+    return s;
+}
+
+async function get_session_settings() {
+    let session = browser["storage"]["session"];
+    if (!session) return undefined;
+    let data = await session["get"]();
+    let s = new Settings(data, "session");
+    await s._validate();
+    return s;
+}
+
+module.exports = { CUR_VERSION, Version, Settings, get_settings, get_local_settings, get_session_settings }

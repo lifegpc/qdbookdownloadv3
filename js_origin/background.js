@@ -1,6 +1,7 @@
 const { browser } = require('./const');
 const { MyEvent, EventPool } = require('./eventpool');
-const { connectTab, getExtensionTabs, waitTabLoaded, reloadTab } = require('./tabs');
+const { get_session_settings, get_local_settings } = require('./settings');
+const { connectTab, getExtensionTabs, waitTabLoaded, reloadTab, removeTab, getTab } = require('./tabs');
 
 let current_port = undefined;
 let ep = new EventPool();
@@ -21,13 +22,47 @@ function add_port_listener() {
 }
 
 async function get_new_port(allow_create_tab = true) {
+    let session_error = r => console.warn("Failed to save session settings:", r);
+    let session = (await get_session_settings()) || (await get_local_settings());
+    let last_connected_sandbox = session.last_connected_sandbox;
+    console.log('Last connected sandbox:', last_connected_sandbox);
+    if (last_connected_sandbox !== undefined) {
+        let tab = await getTab(last_connected_sandbox, true);
+        if (tab !== undefined) {
+            console.log('Last connected sandbox tab:', tab);
+            if (tab['discarded'] !== false) {
+                await reloadTab(tab['id'], true);
+                await waitTabLoaded(tab['id']);
+            }
+            function try_connect() {
+                try {
+                    console.log('Try to connect tab:', last_connected_sandbox);
+                    let port = connectTab(last_connected_sandbox, { 'name': 'sandbox' });
+                    if (port !== undefined) {
+                        current_port = port;
+                        add_port_listener();
+                        return true;
+                    }
+                    return false;
+                } catch (e) {
+                    console.warn(`Failed to connect to tab ${tab['id']}:`, e);
+                    return false;
+                }
+            }
+            if (try_connect()) {
+                return true;
+            }
+        }
+    }
+    /// Chrome may return no tabs when service work is just started but actually there are some tabs.
     let tabs = await getExtensionTabs();
     for (let tab of tabs) {
         if (tab['url']) {
             let url = new URL(tab['url']);
-            if (url.pathname == '/manage.html' || url.pathname == '/forepage.html') {
+            let is_forepage = url.pathname == '/forepage.html';
+            if (url.pathname == '/manage.html' || is_forepage) {
                 if (tab['discarded'] !== false) {
-                    if (url.pathname == '/forepage.html') {
+                    if (is_forepage) {
                         await reloadTab(tab['id'], true);
                         await waitTabLoaded(tab['id']);
                     } else {
@@ -38,11 +73,16 @@ async function get_new_port(allow_create_tab = true) {
                     let port = connectTab(tab['id'], { 'name': 'sandbox' });
                     if (port !== undefined) {
                         current_port = port;
+                        session.last_connected_sandbox = tab['id'];
+                        session._save().catch(session_error);
                         add_port_listener();
                         return true;
                     }
                 } catch (e) {
                     console.warn(`Failed to connect to tab ${tab['id']}:`, e);
+                    if (is_forepage) {
+                        removeTab(tab['id']);
+                    }
                 }
             }
         }
@@ -54,6 +94,8 @@ async function get_new_port(allow_create_tab = true) {
             let port = connectTab(tab['id'], { 'name': 'sandbox' });
             if (port !== undefined) {
                 current_port = port;
+                session.last_connected_sandbox = tab['id'];
+                session._save().catch(session_error);
                 add_port_listener();
                 return true;
             }

@@ -40,11 +40,31 @@ function getExtensionTabs(discarded = undefined) {
 }
 
 /**
+ * @param {number} tabId Tab id
+ * @param {boolean} allow_error Whether to allow error.
+ * @returns {Promise<any | undefined>}
+ */
+function getTab(tabId, allow_error = false) {
+    if (!allow_error) return browser['tabs']['get'](tabId);
+    return new Promise((resolve, reject) => {
+        browser['tabs']['get'](tabId).then(tab => resolve(tab)).catch(_ => resolve(undefined));
+    });
+}
+
+/**
  * @param {number} tabId
  * @param {boolean} bypassCache Whether to bypass local caching.
  */
 async function reloadTab(tabId, bypassCache = false) {
     return browser['tabs']['reload'](tabId, { 'bypassCache': bypassCache });
+}
+
+/**
+ * @param {number | Array<number>} tabId
+ * @returns {Promise<void>}
+ */
+async function removeTab(tabId) {
+    return browser['tabs']['remove'](tabId);
 }
 
 async function waitTabLoaded(tabId) {
@@ -63,4 +83,4 @@ async function waitTabLoaded(tabId) {
     })
 }
 
-module.exports = { connectTab, getCurrentTabs, getCurrentTab, getExtensionTabs, reloadTab, waitTabLoaded }
+module.exports = { connectTab, getCurrentTabs, getCurrentTab, getExtensionTabs, getTab, reloadTab, removeTab, waitTabLoaded }
