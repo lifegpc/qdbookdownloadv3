@@ -30,10 +30,6 @@ async function get_new_port(allow_create_tab = true) {
         let tab = await getTab(last_connected_sandbox, true);
         if (tab !== undefined) {
             console.log('Last connected sandbox tab:', tab);
-            if (tab['discarded'] !== false) {
-                await reloadTab(tab['id'], true);
-                await waitTabLoaded(tab['id']);
-            }
             function try_connect() {
                 try {
                     console.log('Try to connect tab:', last_connected_sandbox);
@@ -54,7 +50,7 @@ async function get_new_port(allow_create_tab = true) {
             }
         }
     }
-    /// Chrome may return no tabs when service work is just started but actually there are some tabs.
+    /// Chrome may return no tabs when service worker is just started but actually there are some tabs.
     let tabs = await getExtensionTabs();
     for (let tab of tabs) {
         if (tab['url']) {
