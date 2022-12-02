@@ -45,9 +45,19 @@ function get_book_tags() {
         let is_status_tag = e2.classList.contains('blue');
         let url = undefined;
         if (e2.tagName === 'A') {
-            url = e2.href;
+            url = e2['href'];
         }
         tags.push(new QDBookTag(tag, is_status_tag, url));
+    }
+    let eles2 = document.getElementsByClassName('tags');
+    for (let e of eles2) {
+        /**@type {HTMLElement}*/
+        let e2 = e;
+        let url = undefined;
+        if (e2.tagName === 'A') {
+            url = e2['href'];
+        }
+        tags.push(new QDBookTag(e2.innerText.trim(), false, url));
     }
     return tags;
 }
@@ -58,6 +68,22 @@ function get_book_name() {
     /**@type {HTMLElement}*/
     let ele = eles[0];
     return ele.innerText.trim();
+}
+
+function get_intro() {
+    let eles = document.getElementsByClassName('intro');
+    if (!eles.length) return null;
+    /**@type {HTMLElement}*/
+    let ele = eles[0];
+    return ele.innerText.trim();
+}
+
+function get_full_intro() {
+    let eles = document.getElementsByClassName('book-intro');
+    if (!eles.length) return null;
+    /**@type {HTMLElement}*/
+    let ele = eles[0];
+    return ele.innerHTML.trim();
 }
 
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
@@ -89,6 +115,8 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
             data["img"] = get_book_img();
             data["name"] = get_book_name();
             data["tags"] = get_book_tags();
+            data['intro'] = get_intro();
+            data['full_intro'] = get_full_intro();
             let ndata = stringify(data, QDBookInfo.get_json_map(), true, true);
             re['data'] = ndata;
         }
