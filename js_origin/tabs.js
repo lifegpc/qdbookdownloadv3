@@ -54,8 +54,9 @@ function getTab(tabId, allow_error = false) {
 /**
  * @param {number} tabId
  * @param {boolean} bypassCache Whether to bypass local caching.
+ * @returns {Promise<any>}
  */
-async function reloadTab(tabId, bypassCache = false) {
+function reloadTab(tabId, bypassCache = false) {
     return browser['tabs']['reload'](tabId, { 'bypassCache': bypassCache });
 }
 
@@ -63,11 +64,11 @@ async function reloadTab(tabId, bypassCache = false) {
  * @param {number | Array<number>} tabId
  * @returns {Promise<void>}
  */
-async function removeTab(tabId) {
+function removeTab(tabId) {
     return browser['tabs']['remove'](tabId);
 }
 
-async function waitTabLoaded(tabId) {
+function waitTabLoaded(tabId) {
     return new Promise((resolve, reject) => {
         let timer = setInterval(() => {
             browser['tabs']['get'](tabId).then(tab => {
