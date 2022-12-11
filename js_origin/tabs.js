@@ -2,13 +2,14 @@ const { browser } = require('./const');
 
 /**
  * @param {number} tabId
+ * @param {{name: string | undefined, frameId: number | undefined, documentId: number | undefined} | undefined} connectInfo
  */
 function connectTab(tabId, connectInfo = undefined) {
     return browser['tabs']['connect'](tabId, connectInfo);
 }
 
 /**
- * @param {number} currentWindow Whether the tabs are in the current window.
+ * @param {boolean} currentWindow Whether the tabs are in the current window.
  * @returns {Promise<Array<any>>}
  */
 function getCurrentTabs(currentWindow = true) {

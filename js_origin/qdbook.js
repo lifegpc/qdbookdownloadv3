@@ -1,8 +1,11 @@
 const { browser } = require('./const');
 const { getI18n } = require('./i18n');
 const stringify = require('./json/stringify');
-const { QDBookTag, QDBookInfo } = require('./qdbook_info');
+const { QDBookTag, QDBookInfo, QDVolume, QDChapter } = require('./qdbook_info');
 const { split_filename } = require('./zip/utils');
+
+const TIME_REGEX = /\d+-\d+-\d+ \d+:\d+\d+/
+const WD_REGEX = /\d+ *$/
 
 function get_g_data() {
     let cols = document.getElementsByTagName('script');
@@ -86,6 +89,72 @@ function get_full_intro() {
     return ele.innerHTML.trim();
 }
 
+function get_chapter_tree() {
+    let volumes = document.getElementsByClassName('volume');
+    if (!volumes.length) return [];
+    /**@type {Array<QDVolume>} */
+    let vols = [];
+    for (let i = 0; i < volumes.length; i++) {
+        /**@type {HTMLElement}*/
+        let volume = volumes[i];
+        let tmp = volume.querySelector('h3>i');
+        if (tmp === null) {
+            console.warn('Failed to get volume name');
+            continue
+        }
+        let vol_namee = tmp.previousSibling;
+        if (!(vol_namee instanceof Text)) {
+            console.warn('Failed to get volume name');
+            continue
+        }
+        let vol_name = vol_namee.textContent.trim();
+        let is_vip = volume.querySelector('h3>.free') === null;
+        let vol = new QDVolume(vol_name, is_vip);
+        vols.push(vol);
+        let chaps = volume.querySelector('ul.cf');
+        if (chaps === null) {
+            console.warn('Failed to get chapters');
+            continue
+        }
+        for (let j = 0; j < chaps.children.length; j++) {
+            let chap = chaps.children[j];
+            let chapl = chap.querySelector('a');
+            if (chapl === null) {
+                console.warn('Failed to get chapter name');
+                continue
+            }
+            let chap_name = chapl.innerText.trim();
+            let chap_link = chapl.href;
+            let upload_timee = chapl.title.match(TIME_REGEX);
+            /**@type {Date | undefined}*/
+            let upload_time = undefined;
+            if (upload_timee === null) {
+                console.warn('Failed to get upload time:', chapl.title);
+            } else {
+                let tmp = upload_timee[0].replace(' ', 'T') + '+08:00';
+                try {
+                    upload_time = new Date(tmp);
+                } catch (e) {
+                    console.warn('Failed to parse upload time:', tmp, e);
+                }
+            }
+            let wdd = chapl.title.match(WD_REGEX);
+            let word_count = undefined;
+            if (wdd === null) {
+                console.warn('Failed to get word count:', chapl.title);
+            } else {
+                word_count = parseInt(wdd[0]);
+            }
+            let locked = chap.querySelector('em.iconfont') !== null;
+            let ch = new QDChapter(chap_name, chap_link, undefined, upload_time, word_count, locked);
+            /// This will generate id if is exists in link.
+            ch.chapterId();
+            vol._chapters.push(ch);
+        }
+    }
+    return vols;
+}
+
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
     if (request['@type'] == 'get_qdbook_gdata') {
         let re = { "@type": "qdbook_gdata", "ok": true, 'msg': 'ok' }
@@ -117,6 +186,7 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
             data["tags"] = get_book_tags();
             data['intro'] = get_intro();
             data['full_intro'] = get_full_intro();
+            data['volumes'] = get_chapter_tree();
             let ndata = stringify(data, QDBookInfo.get_json_map(), true, true);
             re['data'] = ndata;
         }

@@ -1,6 +1,84 @@
 const { structuredClone } = require('./clone');
 const parse = require('./json/parse');
 const stringify = require('./json/stringify');
+const { split_filename } = require('./zip/utils');
+
+class QDChapter {
+    /**
+     * @param {string} title Chapter title
+     * @param {string | undefined} url Chapter's url
+     * @param {number | undefined} id Chapter's id
+     * @param {Date | undefined} upload_time Chapter's upload time
+     * @param {number | undefined} word_count Chapter's word count
+     * @param {boolean} is_locked Chapter is locked or not
+     */
+    constructor(title, url = undefined, id = undefined, upload_time = undefined, word_count = undefined, is_locked = false) {
+        /**@type {string} Chapter title*/
+        this._title = title;
+        /**@type {string | undefined} Chapter's url*/
+        this._url = url;
+        /**@type {number | undefined} Chapter's id*/
+        this._id = id;
+        /**@type {Date | undefined} Chapter's upload time*/
+        this._upload_time = upload_time;
+        /**@type {number | undefined} Chapter's word count*/
+        this._word_count = word_count;
+        /**@type {boolean} Chapter is locked or not*/
+        this._is_locked = is_locked;
+        this._try_get_id = true;
+    }
+    chapterId() {
+        if (this._id === undefined) {
+            if (this._try_get_id) {
+                let tmp = split_filename(this._url).pop();
+                if (tmp !== undefined) {
+                    if (/^\d+$/.test(tmp)) {
+                        this._id = parseInt(tmp);
+                    }
+                }
+                this._try_get_id = false;
+            }
+        }
+        return this._id;
+    }
+    toJson() {
+        let o = { 'title': this._title };
+        if (this._url != undefined) o['url'] = this._url;
+        if (this._id != undefined) o['id'] = this._id;
+        if (this._upload_time != undefined) o['upload_time'] = this._upload_time;
+        if (this._word_count != undefined) o['word_count'] = this._word_count;
+        if (this._is_locked) o['locked'] = true;
+        return structuredClone(o);
+    }
+    static fromJson(data) {
+        let o = new QDChapter(data['title'], data['url'], data['id'], data['upload_time'], data['word_count'], data['locked']);
+        if (typeof o._upload_time == "string") o._upload_time = new Date(o._upload_time);
+        return o;
+    }
+}
+
+class QDVolume {
+    /**
+     * @param {string} name Volume name
+     * @param {boolean} is_vip Whether the volume is VIP volume
+    */
+    constructor(name, is_vip) {
+        /**@type {string} Volume name*/
+        this._name = name;
+        /**@type {boolean} Whether the volume is VIP volume*/
+        this._is_vip = is_vip;
+        /**@type {Array<QDChapter>} */
+        this._chapters = [];
+    }
+    toJson() {
+        return { 'name': this._name, 'vip': this._is_vip, 'chapters': this._chapters };
+    }
+    static fromJson(data) {
+        let o = new QDVolume(data['name'], data['vip']);
+        o._chapters = data['chapters'];
+        return o
+    }
+}
 
 class QDBookTag {
     /**
@@ -78,6 +156,10 @@ class QDBookInfo {
     webSiteType() {
         return this.isWebSiteType() == 1 ? getI18n('qidian') : getI18n('qidianwomen');
     }
+    /**@returns {Array<QDVolume>} */
+    volumes() {
+        return this._data['volumes'];
+    }
     toJson() {
         let o = structuredClone({ "g_data": this._g_data, "data": this._data });
         return stringify(o, QDBookInfo.get_json_map(), true, true);
@@ -90,9 +172,11 @@ class QDBookInfo {
     static get_json_map() {
         return {
             'QDBookTag': [QDBookTag,
-            /**@param {QDBookTag} d*/ (d) => d.toJson(), QDBookTag.fromJson, true, true]
+            /**@param {QDBookTag} d*/ (d) => d.toJson(), QDBookTag.fromJson, true, true],
+            'QDVolume': [QDVolume, /**@param {QDVolume} d*/ (d) => d.toJson(), QDVolume.fromJson],
+            'QDChapter': [QDChapter, /**@param {QDChapter} d*/ (d) => d.toJson(), QDChapter.fromJson, true, true],
         }
     }
 }
 
-module.exports = { QDBookTag, QDBookInfo };
+module.exports = { QDBookTag, QDBookInfo, QDChapter, QDVolume };
