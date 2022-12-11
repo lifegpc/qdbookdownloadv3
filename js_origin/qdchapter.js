@@ -117,6 +117,19 @@ let observer = new MutationObserver((data) => {
     }
 })
 
+/**
+ * @param {string} s 
+ */
+function unescapeHTML(s) {
+    try {
+        let tmp = document.createElement('tmp');
+        tmp.innerHTML = s;
+        return tmp.innerText;
+    } catch {
+        return s;
+    }
+}
+
 observer.observe(document, { childList: true, subtree: true });
 
 browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) => {
@@ -188,7 +201,7 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
                 if (name.length) {
                     /**@type {HTMLElement}*/
                     let ele = name[0].children[0];
-                    data['name'] = ele.innerText;
+                    data['name'] = unescapeHTML(ele.innerText);
                     if (!data['name'].length) {
                         re['code'] |= 2;
                     }
@@ -206,7 +219,7 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
                     }
                 }
                 if (cols.length) {
-                    data['name'] = cols[0].innerHTML;
+                    data['name'] = unescapeHTML(cols[0].innerText);
                 } else {
                     re['code'] |= 2;
                 }
@@ -218,7 +231,7 @@ browser['runtime']['onMessage']['addListener']((request, sender, sendResponse) =
                 }
                 for (let i = 1; i < max; i++) {
                     let c = cols[i];
-                    data['contents'].push(c.innerText);
+                    data['contents'].push(unescapeHTML(c.innerText));
                 }
             }
             if (!ci.vipStatus()) {
@@ -313,7 +326,7 @@ get_settings().then(settings => {
                 }
             }
             if (cols.length) {
-                data['name'] = cols[0].innerHTML;
+                data['name'] = unescapeHTML(cols[0].innerText);
             } else {
                 console.warn('Failed to get chapter name.');
             }
@@ -329,7 +342,7 @@ get_settings().then(settings => {
             if (max > 0) {
                 for (let i = 1; i < max; i++) {
                     let c = cols[i];
-                    data['contents'].push(c.innerText);
+                    data['contents'].push(unescapeHTML(c.innerText));
                 }
                 cols = document.getElementsByClassName('j_chapterWordCut');
                 if (cols.length) {
