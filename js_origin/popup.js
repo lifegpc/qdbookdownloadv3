@@ -126,8 +126,8 @@ function generate_book_info(data, settings, doc = document) {
     async function save_as_zip() {
         let zip = new Zip();
         let encoder = new TextEncoder();
-        if (!data.chapter_cES()) zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`.replace('/', '_'), encoder.encode(genText()));
-        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`.replace('/', '_'), encoder.encode((await data.toXhtml(settings, (filename, data) => {
+        if (!data.chapter_cES()) zip.add_file(`${data.bookName()}-${data.chapterName()}.txt`.replaceAll('/', '_'), encoder.encode(genText()));
+        zip.add_file(`${data.bookName()}-${data.chapterName()}.xhtml`.replaceAll('/', '_'), encoder.encode((await data.toXhtml(settings, (filename, data) => {
             zip.add_file(filename, data);
         })).to_xhtml()));
         let blob = await zip._toBlob({ 'type': 'application/zip' });

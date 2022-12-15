@@ -123,7 +123,7 @@ let observer = new MutationObserver((data) => {
 function unescapeHTML(s) {
     try {
         let tmp = document.createElement('tmp');
-        tmp.innerHTML = s;
+        tmp.innerHTML = s.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
         return tmp.innerText;
     } catch {
         return s;
