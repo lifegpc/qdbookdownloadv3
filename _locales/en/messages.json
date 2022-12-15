@@ -66,5 +66,10 @@
     "use_save_as_zip": { "message": "Due to protect, please use Save as a ZIP file." },
     "strip_in_xhtml_file_desc": { "message": "This may not works on some protected chapters." },
     "no_data_in_db": { "message": "Can not find any data in database." },
-    "chapter_protected_nonmatch": { "message": "Some data may change but it can not be detected due to protection." }
+    "chapter_protected_nonmatch": { "message": "Some data may change but it can not be detected due to protection." },
+    "bookIntro": { "message": "Book introduction: " },
+    "bookDesc": { "message": "Book description: " },
+    "bookStatus": { "message": "Book status: " },
+    "bookGenre": { "message": "Book genre:" },
+    "bookAuTags": { "message": "Book author defined tags:" }
 }

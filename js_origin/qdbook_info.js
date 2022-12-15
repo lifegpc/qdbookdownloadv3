@@ -1,4 +1,5 @@
 const { structuredClone } = require('./clone');
+const { getI18n } = require('./i18n');
 const parse = require('./json/parse');
 const stringify = require('./json/stringify');
 const { split_filename } = require('./zip/utils');
@@ -140,23 +141,33 @@ class QDBookTag {
     /**
      * Book tag
      * @param {string} name tag name
-     * @param {boolean} is_status_tag is a status tag
+     * @param {number} type 0 is a status tag, 1 is genre tag, 2 is author defined tag
      * @param {string | undefined} url tag url
      */
-    constructor(name, is_status_tag, url = undefined) {
+    constructor(name, type, url = undefined) {
         /**@type {string} tag name*/
         this._name = name;
-        /**@type {boolean} is a status tag*/
-        this._is_status_tag = is_status_tag;
+        /**@type {number} 0 is a status tag, 1 is genre tag, 2 is author defined tag*/
+        this._type = type;
         /**@type {string | undefined} tag url*/
         this._url = url;
     }
     toJson() {
-        let o = { "name": this._name, "type": this._is_status_tag };
+        let o = { "name": this._name, "type": this._type };
         if (this._url !== undefined) {
             o['url'] = this._url;
         }
         return structuredClone(o)
+    }
+
+    generate_html(doc = document) {
+        if (this._url !== undefined) {
+            let a = doc.createElement('a');
+            a.href = this._url;
+            a.innerText = this._name;
+            return a;
+        }
+        return this._name;
     }
 
     static fromJson(data) {
@@ -172,6 +183,22 @@ class QDBookInfo {
     /**@returns {number}*/
     bookId() {
         return this._g_data['pageJson']['bookId'];
+    }
+    /**@returns {string | null} */
+    bookDesc() {
+        return this._data["full_intro"];
+    }
+    /**@returns {string | null}*/
+    bookName() {
+        return this._data['name'];
+    }
+    /**@returns {string | null}*/
+    bookIntro() {
+        return this._data["intro"];
+    }
+    /**@returns {Array<QDBookTag> | null} */
+    bookTags() {
+        return this._data["tags"];
     }
     /**@returns {number}*/
     bookType() {

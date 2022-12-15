@@ -45,12 +45,12 @@ function get_book_tags() {
         /**@type {HTMLElement}*/
         let e2 = e;
         let tag = e2.innerText.trim();
-        let is_status_tag = e2.classList.contains('blue');
+        let status = e2.classList.contains('blue') ? 0 : 1;
         let url = undefined;
         if (e2.tagName === 'A') {
             url = e2['href'];
         }
-        tags.push(new QDBookTag(tag, is_status_tag, url));
+        tags.push(new QDBookTag(tag, status, url));
     }
     let eles2 = document.getElementsByClassName('tags');
     for (let e of eles2) {
@@ -60,7 +60,7 @@ function get_book_tags() {
         if (e2.tagName === 'A') {
             url = e2['href'];
         }
-        tags.push(new QDBookTag(e2.innerText.trim(), false, url));
+        tags.push(new QDBookTag(e2.innerText.trim(), 2, url));
     }
     return tags;
 }

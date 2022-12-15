@@ -11,12 +11,13 @@ const { u8arrcmp } = require('./binary');
 const { Zip } = require('./zip/file');
 const { ZIP_STORED } = require('./zip/const');
 const { QDBookInfo } = require('./qdbook_info');
+const { browser } = require('./const');
 
 /**
  * @param {QDChapterInfo} data Chapter info
  * @param {Settings} settings Settings
  */
-function generate_book_info(data, settings, doc = document) {
+function generate_qdchapter_info(data, settings, doc = document) {
     let d = doc.createElement('div');
     d.append(`${getI18n('siteName')}${data.webSiteType()}`);
     d.append(doc.createElement('br'));
@@ -144,6 +145,55 @@ function generate_book_info(data, settings, doc = document) {
 }
 
 /**
+ * @param {QDBookInfo} data Book info
+ * @param {Settings} settings settings
+ */
+function generate_qdbook_info(data, settings, doc = document) {
+    let d = doc.createElement('div');
+    d.append(`${getI18n('siteName')}${data.webSiteType()}`);
+    d.append(doc.createElement('br'));
+    d.append(`${getI18n('bookName')}${data.bookName()}`);
+    d.append(doc.createElement('br'));
+    d.append(`${getI18n('bookId')}${data.bookId()}`);
+    d.append(doc.createElement('br'));
+    d.append(`${getI18n('authorName')}${data.authorName()}`);
+    d.append(doc.createElement('br'));
+    d.append(`${getI18n('authorId')}${data.authorId()}`);
+    d.append(doc.createElement('br'));
+    d.append(`${getI18n('bookIntro')}${data.bookIntro()}`);
+    d.append(doc.createElement('br'));
+    d.append(getI18n('bookDesc'));
+    let p = doc.createElement('p');
+    d.append(p);
+    p.outerHTML = data.bookDesc();
+    /**@type {HTMLParagraphElement} */
+    let p2 = d.lastElementChild;
+    p2.style.display = 'inline';
+    let tags = data.bookTags();
+    if (tags !== null) {
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('bookStatus')}${tags.filter(v => !v._type).reduce((p, c, i) => {
+            if (!i) p = c._name;
+            else p += `, ${c._name}`;
+            return p;
+        }, "")}`)
+        d.append(doc.createElement('br'));
+        d.append(getI18n('bookGenre'));
+        tags.filter(v => v._type == 1).forEach((v, i) => {
+            if (i) d.append(', ');
+            d.append(v.generate_html());
+        })
+        d.append(doc.createElement('br'));
+        d.append(getI18n('bookAuTags'));
+        tags.filter(v => v._type == 2).forEach((v, i) => {
+            if (i) d.append(', ');
+            d.append(v.generate_html());
+        })
+    }
+    return d;
+}
+
+/**
  * @param {number} tabId Tab id
  * @param {Settings} settings Settings
  */
@@ -216,7 +266,7 @@ async function load_qd_chapter_info(tabId, settings) {
         qdc._data['contents'] = con;
     }
     console.log('Current chapter:', qdc);
-    document.getElementById('main').append(generate_book_info(qdc, settings));
+    document.getElementById('main').append(generate_qdchapter_info(qdc, settings));
 }
 
 /**
@@ -239,6 +289,7 @@ async function load_qd_book_info(tabId, settings) {
     console.log('Book data:', data['data']);
     let book = new QDBookInfo(g_data, data['data']);
     console.log('Current book:', book);
+    document.getElementById('main').append(generate_qdbook_info(book, settings));
 }
 
 async function basic_handle() {
@@ -246,6 +297,15 @@ async function basic_handle() {
     let tab = await getCurrentTab();
     let tabId = tab['id'];
     let url = tab['url'];
+    window.addEventListener('click', (ev) => {
+        if (ev.target instanceof HTMLAnchorElement) {
+            ev.preventDefault();
+            let href = ev.target.href;
+            if (href.startsWith('http')) {
+                browser['tabs']['create']({ 'url': href });
+            }
+        }
+    })
     document.getElementById('main').style.width = tab['width'] / 2;
     let re = match_urls.match_url(url);
     if (re == match_urls.QD_CHAPTER) {
