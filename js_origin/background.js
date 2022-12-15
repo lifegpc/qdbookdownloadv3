@@ -1,8 +1,10 @@
 const { browser } = require('./const');
 const { MyEvent, EventPool } = require('./eventpool');
+const { getI18n } = require('./i18n');
 const { get_session_settings, get_local_settings } = require('./settings');
-const { connectTab, getExtensionTabs, waitTabLoaded, reloadTab, removeTab, getTab } = require('./tabs');
+const { connectTab, getExtensionTabs, waitTabLoaded, reloadTab, removeTab, getTab, highlightTab } = require('./tabs');
 
+const MANAGE_CONTEXT_MENU_ID = 'manage_book';
 let current_port = undefined;
 let ep = new EventPool();
 
@@ -152,3 +154,26 @@ browser['runtime']['onConnect']['addListener'](p => {
         port['postMessage'](false)
     })
 })
+
+browser['runtime']['onInstalled']['addListener'](async () => {
+    let menus = browser['contextMenus'];
+    /**@type {void | Promise<void>} Chrome returns void, Firefox returns Promise<void>*/
+    let removing = menus['removeAll']();
+    if (removing instanceof Promise) {
+        await removing;
+    }
+    await menus['create']({ 'contexts': ['action'], 'title': getI18n('manage_title'), 'id': MANAGE_CONTEXT_MENU_ID });
+})
+
+browser['contextMenus']['onClicked']['addListener'](async (info, tab) => {
+    if (info['menuItemId'] == MANAGE_CONTEXT_MENU_ID) {
+        let url = browser['runtime']['getURL']('/manage.html');
+        let tabs = await browser['tabs']['query']({ 'url': url });
+        if (tabs.length > 0) {
+            let tab = tabs[0];
+            await highlightTab(tab['index'], tab['windowId']);
+        } else {
+            await browser['tabs']['create']({ 'url': url });
+        }
+    }
+});

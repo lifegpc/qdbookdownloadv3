@@ -53,6 +53,17 @@ function getTab(tabId, allow_error = false) {
 }
 
 /**
+ * @param {number | Array<number>} tabIndex
+ * @param {number | undefined} windowId
+ * @returns {Promise<any>}
+ */
+function highlightTab(tabIndex, windowId = undefined) {
+    let o = { 'tabs': tabIndex };
+    if (windowId !== undefined) o['windowId'] = windowId;
+    return browser['tabs']['highlight'](o);
+}
+
+/**
  * @param {number} tabId
  * @param {boolean} bypassCache Whether to bypass local caching.
  * @returns {Promise<any>}
@@ -85,4 +96,4 @@ function waitTabLoaded(tabId) {
     })
 }
 
-module.exports = { connectTab, getCurrentTabs, getCurrentTab, getExtensionTabs, getTab, reloadTab, removeTab, waitTabLoaded }
+module.exports = { connectTab, getCurrentTabs, getCurrentTab, getExtensionTabs, getTab, highlightTab, reloadTab, removeTab, waitTabLoaded }
