@@ -282,7 +282,6 @@ class QDBookInfo {
                 if (nindex === null) {
                     /// Insert the chapter
                     if (index === null) {
-                        console.log(ch._id);
                         tvol._chapters.unshift(ch);
                         nindex = [nvindex, 0]
                     } else {
