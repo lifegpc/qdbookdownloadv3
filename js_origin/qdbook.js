@@ -148,7 +148,7 @@ function get_chapter_tree() {
             let locked = chap.querySelector('em.iconfont') !== null;
             let ch = new QDChapter(chap_name, chap_link, undefined, upload_time, word_count, locked);
             /// This will generate id if is exists in link.
-            ch.chapterId();
+            ch.try_get_id();
             vol._chapters.push(ch);
         }
     }

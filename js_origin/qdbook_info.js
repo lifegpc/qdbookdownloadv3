@@ -26,20 +26,34 @@ class QDChapter {
         /**@type {boolean} Chapter is locked or not*/
         this._is_locked = is_locked;
         this._try_get_id = true;
+        this._eid = undefined;
     }
-    chapterId() {
-        if (this._id === undefined) {
-            if (this._try_get_id) {
+    try_get_id() {
+        if (this._try_get_id) {
+            if (this._url !== undefined) {
                 let tmp = split_filename(this._url).pop();
                 if (tmp !== undefined) {
                     if (/^\d+$/.test(tmp)) {
                         this._id = parseInt(tmp);
+                    } else {
+                        this._eid = tmp;
                     }
                 }
-                this._try_get_id = false;
             }
+            this._try_get_id = false;
+        }
+    }
+    chapterId() {
+        if (this._id === undefined) {
+            this.try_get_id();
         }
         return this._id;
+    }
+    encodedChapterId() {
+        if (this._eid === undefined) {
+            this.try_get_id();
+        }
+        return this._eid;
     }
     toJson() {
         let o = { 'title': this._title };
@@ -48,12 +62,33 @@ class QDChapter {
         if (this._upload_time != undefined) o['upload_time'] = this._upload_time;
         if (this._word_count != undefined) o['word_count'] = this._word_count;
         if (this._is_locked) o['locked'] = true;
+        if (this._eid != undefined) o['eid'] = this._eid;
         return structuredClone(o);
     }
     static fromJson(data) {
         let o = new QDChapter(data['title'], data['url'], data['id'], data['upload_time'], data['word_count'], data['locked']);
         if (typeof o._upload_time == "string") o._upload_time = new Date(o._upload_time);
+        let eid = data['eid'];
+        if (typeof eid == "string") o._eid = eid;
         return o;
+    }
+    /**
+     * Compare chapter's id
+     * @param {QDChapter} ch Another chapter
+     * @returns {boolean} true if is same chapter
+     */
+    _equal(ch) {
+        let id1 = this.chapterId();
+        let id2 = ch.chapterId();
+        if (id1 !== undefined && id2 !== undefined && id1 === id2) {
+            return true;
+        }
+        let eid1 = this.encodedChapterId();
+        let eid2 = ch.encodedChapterId();
+        if (eid1 !== undefined && eid2 !== undefined && eid1 === eid2) {
+            return true;
+        }
+        return false;
     }
 }
 
@@ -77,6 +112,27 @@ class QDVolume {
         let o = new QDVolume(data['name'], data['vip']);
         o._chapters = data['chapters'];
         return o
+    }
+    _simple_clone() {
+        return new QDVolume(this._name, this._is_vip);
+    }
+    /**
+     * @param {QDVolume} volume
+     */
+    _equal(volume) {
+        return this._name === volume._name && this._is_vip === volume._is_vip;
+    }
+    /**
+     * @param {QDChapter} ch
+     * @returns index
+     */
+    findChapter(ch) {
+        for (let i = 0; i < this._chapters.length; i++) {
+            if (this._chapters[i]._equal(ch)) {
+                return i;
+            }
+        }
+        return null;
     }
 }
 
@@ -160,9 +216,96 @@ class QDBookInfo {
     volumes() {
         return this._data['volumes'];
     }
+    /**
+     * @param {QDChapter} ch
+     * @returns {[number, number]} index
+     */
+    findChapter(ch) {
+        let volumes = this.volumes();
+        if (volumes === undefined) return null;
+        for (let i = 0; i < volumes.length; i++) {
+            let re = volumes[i].findChapter(ch);
+            if (re !== null) return [i, re];
+        }
+        return null;
+    }
+    /**
+     * @param {QDVolume} vol Volume
+     * @returns index
+     */
+    findVolume(vol) {
+        let volumes = this.volumes();
+        if (volumes === undefined) return null;
+        for (let i = 0; i < volumes.length; i++) {
+            if (volumes[i]._equal(vol)) {
+                return i;
+            }
+        }
+        return null;
+    }
+    /**
+     * Merge book's catalog
+     * @param {QDBookInfo} info Book info
+     */
+    merge_catalog(info) {
+        let ivolumes = info.volumes();
+        let mvolumes = this.volumes();
+        if (ivolumes === undefined) return;
+        if (mvolumes === undefined || !mvolumes.length) {
+            this._data['volumes'] = ivolumes;
+            return;
+        }
+        /**@type {number | null} */
+        let vindex = null;
+        /**@type {number | null} */
+        let index = null;
+        for (let i = 0; i < mvolumes.length; i++) {
+            let vol = mvolumes[i];
+            let nvindex = info.findVolume(vol);
+            let tvol = nvindex === null ? vol._simple_clone() : ivolumes[nvindex];
+            /// Insert the volume if it not exists
+            if (nvindex === null) {
+                if (vindex === null) {
+                    ivolumes.unshift(tvol);
+                    nvindex = 0;
+                } else {
+                    ivolumes.splice(vindex + 1, 0, tvol);
+                    nvindex = vindex + 1;
+                }
+            }
+            index = null;
+            vindex = nvindex;
+            for (let j = 0; j < vol._chapters.length; j++) {
+                let ch = vol._chapters[j];
+                let nindex = info.findChapter(ch);
+                /// Chapter can not be found in catalog
+                if (nindex === null) {
+                    /// Insert the chapter
+                    if (index === null) {
+                        console.log(ch._id);
+                        tvol._chapters.unshift(ch);
+                        nindex = [nvindex, 0]
+                    } else {
+                        tvol._chapters.splice(index + 1, 0, ch);
+                        nindex = [nvindex, index + 1];
+                    }
+                } else if (nindex[0] !== vindex) {
+                    let och = ivolumes[nindex[0]]._chapters.splice(nindex[1], 1)[0];
+                    if (index === null) {
+                        tvol._chapters.unshift(och);
+                        nindex = [nvindex, 0]
+                    } else {
+                        tvol._chapters.splice(index + 1, 0, och);
+                        nindex = [nvindex, index + 1];
+                    }
+                }
+                index = nindex[1];
+            }
+        }
+        this._data['volumes'] = ivolumes.filter(vol => vol._chapters.length > 0);
+    }
     toJson() {
-        let o = structuredClone({ "g_data": this._g_data, "data": this._data });
-        return stringify(o, QDBookInfo.get_json_map(), true, true);
+        return stringify({ "g_data": this._g_data, "data": this._data }, QDBookInfo.get_json_map(), true, true);
     }
     static fromJson(json) {
         let obj = parse(json, QDBookInfo.get_json_map(), true)
