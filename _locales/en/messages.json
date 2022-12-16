@@ -78,5 +78,6 @@
     "freeWordCount": { "message": "Free chapters' word count: " },
     "buyedWordCount": { "message": "Purchased chapters' word count: " },
     "lockedWordCount": { "message": "Locked chapters' word count: " },
-    "unknownWordCount": { "message": "VIP status unknown chapter's word count (may free chapter or purchased chapter): " }
+    "unknownWordCount": { "message": "VIP status unknown chapter's word count (may free chapter or purchased chapter): " },
+    "saveToDatabaseOk": { "message": "Saved to database successfully." }
 }

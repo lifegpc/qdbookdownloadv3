@@ -62,5 +62,6 @@
     "freeWordCount": { "message": "免费章节字数：" },
     "buyedWordCount": { "message": "已购买章节字数：" },
     "lockedWordCount": { "message": "未购买章节字数：" },
-    "unknownWordCount": { "message": "VIP状态未知章节字数（可能是已购买章节或免费章节）： " }
+    "unknownWordCount": { "message": "VIP状态未知章节字数（可能是已购买章节或免费章节）： " },
+    "saveToDatabaseOk": { "message": "保存到数据库成功。" }
 }

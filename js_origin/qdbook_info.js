@@ -235,9 +235,9 @@ class QDBookTag {
 }
 
 class QDBookInfo {
-    constructor(g_data, data) {
+    constructor(g_data, data, skip_parse = false) {
         this._g_data = g_data;
-        this._data = parse(data, QDBookInfo.get_json_map(), true);
+        this._data = skip_parse ? data : parse(data, QDBookInfo.get_json_map(), true);
     }
     /**@returns {number}*/
     bookId() {
@@ -437,7 +437,7 @@ class QDBookInfo {
     }
     static fromJson(json) {
         let obj = parse(json, QDBookInfo.get_json_map(), true)
-        return new QDBookInfo(obj['g_data'], obj["data"]);
+        return new QDBookInfo(obj['g_data'], obj["data"], true);
     }
     /**@returns {Object.<string, [()=>void, (data: any) => any, (data: any) => any | undefined, boolean | undefined, boolean | undefined]>}*/
     static get_json_map() {

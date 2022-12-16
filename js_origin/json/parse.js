@@ -18,6 +18,9 @@ function parse2(data, m) {
         }
         if (data['@type'] != undefined) {
             let type = data['@type'];
+            if (m[type] === undefined) {
+                return data;
+            }
             let d = data['data'];
             let p = m[type][2] || ((data) => new m[type][0](data));
             let skip_parse = m[type][4] || false;

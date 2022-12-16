@@ -147,8 +147,9 @@ function generate_qdchapter_info(data, settings, doc = document) {
 /**
  * @param {QDBookInfo} data Book info
  * @param {Settings} settings settings
+ * @param {boolean} have_db
  */
-function generate_qdbook_info(data, settings, doc = document) {
+async function generate_qdbook_info(data, settings, have_db, doc = document) {
     let d = doc.createElement('div');
     d.append(`${getI18n('siteName')}${data.webSiteType()}`);
     d.append(doc.createElement('br'));
@@ -206,6 +207,34 @@ function generate_qdbook_info(data, settings, doc = document) {
         d.append(`${getI18n('lockedWordCount')}${volumes.reduce((i, c) => i + c.lockedWordCount(), 0)}`)
         d.append(doc.createElement('br'));
         d.append(`${getI18n('unknownWordCount')}${volumes.reduce((i, c) => i + c.unknownWordCount(), 0)}`)
+    }
+    d.append(doc.createElement('br'));
+    function add_save_to_database_button() {
+        let saveToDatabase = doc.createElement('button');
+        saveToDatabase.innerText = getI18n('saveToDatabase');
+        saveToDatabase.addEventListener('click', () => {
+            indexeddb_qd.save_book(data).then(() => {
+                saveToDatabase.replaceWith(getI18n('saveToDatabaseOk'));
+            }).catch(e => {
+                console.error(e);
+                alert(getI18n('saveFailed'));
+            })
+        })
+        d.append(saveToDatabase);
+    }
+    if (have_db) {
+        await(new Promise((resolve, reject) => {
+            indexeddb_qd.save_book(data).then(() => {
+                d.append(getI18n('saveToDatabaseOk'));
+                resolve();
+            }).catch(e => {
+                console.error(e);
+                add_save_to_database_button();
+                resolve();
+            });
+        }))
+    } else {
+        add_save_to_database_button();
     }
     return d;
 }
@@ -307,12 +336,14 @@ async function load_qd_book_info(tabId, settings) {
     let book = new QDBookInfo(g_data, data['data']);
     console.log('Current book:', book);
     let dbbook = await indexeddb_qd.get_book_info(book.bookId());
+    let have_db = false;
     if (dbbook !== undefined) {
         console.log('Book info from db:', dbbook);
         book.merge_catalog(dbbook);
+        have_db = true;
     }
     await book.update_catalog(indexeddb_qd.get_chatper, indexeddb_qd.get_latest_chapters_key_by_eid, indexeddb_qd.get_latest_chapters_key_by_chapterId);
-    document.getElementById('main').append(generate_qdbook_info(book, settings));
+    document.getElementById('main').append(await generate_qdbook_info(book, settings, have_db));
 }
 
 async function basic_handle() {
