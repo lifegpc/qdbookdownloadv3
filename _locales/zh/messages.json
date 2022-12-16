@@ -56,5 +56,11 @@
     "bookDesc": { "message": "书籍介绍：" },
     "bookStatus": { "message": "书籍状态：" },
     "bookGenre": { "message": "书籍分类：" },
-    "bookAuTags": { "message": "书籍自定义标签：" }
+    "bookAuTags": { "message": "书籍自定义标签：" },
+    "volumeCount": { "message": "卷数：" },
+    "chapterCount": { "message": "章数：" },
+    "freeWordCount": { "message": "免费章节字数：" },
+    "buyedWordCount": { "message": "已购买章节字数：" },
+    "lockedWordCount": { "message": "未购买章节字数：" },
+    "unknownWordCount": { "message": "VIP状态未知章节字数（可能是已购买章节或免费章节）： " }
 }

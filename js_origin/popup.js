@@ -181,14 +181,31 @@ function generate_qdbook_info(data, settings, doc = document) {
         d.append(getI18n('bookGenre'));
         tags.filter(v => v._type == 1).forEach((v, i) => {
             if (i) d.append(', ');
-            d.append(v.generate_html());
+            d.append(v.generate_html(doc));
         })
         d.append(doc.createElement('br'));
         d.append(getI18n('bookAuTags'));
         tags.filter(v => v._type == 2).forEach((v, i) => {
             if (i) d.append(', ');
-            d.append(v.generate_html());
+            d.append(v.generate_html(doc));
         })
+    }
+    let volumes = data.volumes();
+    if (volumes !== null) {
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('volumeCount')}${volumes.length}`);
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('chapterCount')}${volumes.reduce((i, c) => i + c._chapters.length, 0)}`)
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('wordCount')}${volumes.reduce((i, c) => i + c.wordCount(), 0)}`)
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('freeWordCount')}${volumes.reduce((i, c) => i + c.freeWordCount(), 0)}`)
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('buyedWordCount')}${volumes.reduce((i, c) => i + c.buyedWordCount(), 0)}`)
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('lockedWordCount')}${volumes.reduce((i, c) => i + c.lockedWordCount(), 0)}`)
+        d.append(doc.createElement('br'));
+        d.append(`${getI18n('unknownWordCount')}${volumes.reduce((i, c) => i + c.unknownWordCount(), 0)}`)
     }
     return d;
 }
@@ -289,6 +306,12 @@ async function load_qd_book_info(tabId, settings) {
     console.log('Book data:', data['data']);
     let book = new QDBookInfo(g_data, data['data']);
     console.log('Current book:', book);
+    let dbbook = await indexeddb_qd.get_book_info(book.bookId());
+    if (dbbook !== undefined) {
+        console.log('Book info from db:', dbbook);
+        book.merge_catalog(dbbook);
+    }
+    await book.update_catalog(indexeddb_qd.get_chatper, indexeddb_qd.get_latest_chapters_key_by_eid, indexeddb_qd.get_latest_chapters_key_by_chapterId);
     document.getElementById('main').append(generate_qdbook_info(book, settings));
 }
 

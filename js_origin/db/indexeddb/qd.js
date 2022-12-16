@@ -147,7 +147,19 @@ function get_book_info(bookId) {
             let store = tx.objectStore('books');
             let req = store.get(bookId);
             req.onsuccess = () => {
-                resolve(req.result !== undefined ? QDBookInfo.fromJson(req.result) : undefined);
+                let re = req.result;
+                if (re !== undefined) {
+                    if (re['compressed']) {
+                        quick_uncompress_with_decode(re['data']).then(data => {
+                            let obj = parse(data);
+                            resolve(QDBookInfo.fromJson(obj));
+                        }).catch(reject);
+                    } else {
+                        resolve(QDBookInfo.fromJson(re));
+                    }
+                } else {
+                    resolve(undefined);
+                }
             }
             req.onerror = () => {
                 need_reinit = true;
@@ -291,6 +303,29 @@ function get_chapters_keys_by_chapterId(id) {
 }
 
 /**
+ * search all chapters keys by encondedChapterId
+ * @param {string} eid enconded Chapter Id
+ * @returns {Promise<Array<[number, number, Date]>>}
+ */
+function get_chapters_keys_by_eid(eid) {
+    return new Promise((resolve, reject) => {
+        init().then(() => {
+            let tx = db.transaction(['chapters'], 'readonly');
+            let store = tx.objectStore('chapters');
+            let ind = store.index('eid');
+            let req = ind.getAllKeys(eid);
+            req.onsuccess = () => {
+                resolve(req.result);
+            }
+            req.onerror = () => {
+                need_reinit = true;
+                reject(req.error);
+            }
+        })
+    })
+}
+
+/**
  * Return latest chapter key by chapterId
  * @param {number} id chapterId
  * @returns {Promise<[number, number, Date]>}
@@ -310,9 +345,28 @@ async function get_latest_chapters_key_by_chapterId(id) {
 }
 
 /**
+ * Return latest chapter key by encondedChapterId
+ * @param {string} eid encoded Chapter Id
+ * @returns {Promise<[number, number, Date]>}
+ */
+async function get_latest_chapters_key_by_eid(eid) {
+    let keys = await get_chapters_keys_by_eid(eid);
+    if (keys === undefined || keys.length == 0) {
+        return undefined;
+    }
+    let key = undefined;
+    keys.forEach((k) => {
+        if (key === undefined || k[2] > key[2]) {
+            key = k;
+        }
+    })
+    return key;
+}
+
+/**
  * return chapter information by key
  * @param {[number, number, Date]} key 
- * @returns {Promise<QDChapterInfo>}
+ * @returns {Promise<QDChapterInfo | undefined>}
  */
 function get_chatper(key) {
     return new Promise((resolve, reject) => {
@@ -349,6 +403,29 @@ function get_chatper(key) {
                 reject(req.error);
             }
         })
+    })
+}
+
+/**
+ * Save book into database
+ * @param {QDBookInfo} info Book information
+ * @returns {Promise<void>}
+ */
+function save_book(info) {
+    return new Promise((resolve, reject) => {
+        init().then(() => {
+            let data = info.toJson();
+            let sdata = stringify(data);
+            quick_compress(sdata).then((data) => {
+                let d = { "data": data, "compressed": true, "id": info.bookId() };
+                set_idb_data('books', d).then(resolve).catch(reject);
+            }).catch(e => {
+                console.warn(e);
+                data['compressed'] = false;
+                data['id'] = info.bookId();
+                set_idb_data('books', data).then(resolve).catch(reject);
+            })
+        }).catch(reject);
     })
 }
 
@@ -393,7 +470,10 @@ module.exports = {
     get_book_info_from_chapter,
     get_chapters_keys_by_bookId,
     get_chapters_keys_by_chapterId,
+    get_chapters_keys_by_eid,
     get_chatper,
     get_latest_chapters_key_by_chapterId,
+    get_latest_chapters_key_by_eid,
+    save_book,
     save_chapter,
 };

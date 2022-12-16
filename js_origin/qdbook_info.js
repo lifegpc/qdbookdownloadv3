@@ -2,6 +2,7 @@ const { structuredClone } = require('./clone');
 const { getI18n } = require('./i18n');
 const parse = require('./json/parse');
 const stringify = require('./json/stringify');
+const { QDChapterInfo } = require('./qdchapter_info');
 const { split_filename } = require('./zip/utils');
 
 class QDChapter {
@@ -27,7 +28,10 @@ class QDChapter {
         /**@type {boolean} Chapter is locked or not*/
         this._is_locked = is_locked;
         this._try_get_id = true;
+        /**@type {string | undefined} Encoded chapter id*/
         this._eid = undefined;
+        /**@type {boolean | undefined} The chapter is vip or not*/
+        this._is_vip = undefined;
     }
     try_get_id() {
         if (this._try_get_id) {
@@ -64,6 +68,7 @@ class QDChapter {
         if (this._word_count != undefined) o['word_count'] = this._word_count;
         if (this._is_locked) o['locked'] = true;
         if (this._eid != undefined) o['eid'] = this._eid;
+        if (this._is_vip !== undefined) o['vip'] = this._is_vip;
         return structuredClone(o);
     }
     static fromJson(data) {
@@ -71,6 +76,8 @@ class QDChapter {
         if (typeof o._upload_time == "string") o._upload_time = new Date(o._upload_time);
         let eid = data['eid'];
         if (typeof eid == "string") o._eid = eid;
+        let vip = data['vip'];
+        if (typeof vip == "boolean") o._is_vip = vip;
         return o;
     }
     /**
@@ -105,6 +112,58 @@ class QDVolume {
         this._is_vip = is_vip;
         /**@type {Array<QDChapter>} */
         this._chapters = [];
+        /**@type {number | null} word count */
+        this._word_count = null;
+        /**@type {number | null} 免费章节字数*/
+        this._free_word = null;
+        /**@type {number | null} 已购买章节字数*/
+        this._buyed_word = null;
+        /**@type {number | null} 未购买章节字数*/
+        this._locked_word = null;
+        /**@type {number | null} 无法判断是免费或者已购买的章节字数*/
+        this._unknown_word = null;
+    }
+    buyedWordCount() {
+        this.calwords();
+        return this._buyed_word;
+    }
+    freeWordCount() {
+        this.calwords();
+        return this._free_word;
+    }
+    lockedWordCount() {
+        this.calwords();
+        return this._locked_word;
+    }
+    unknownWordCount() {
+        this.calwords();
+        return this._unknown_word;
+    }
+    wordCount() {
+        this.calwords();
+        return this._word_count;
+    }
+    calwords() {
+        if (this._word_count === null) {
+            this._word_count = 0;
+            this._free_word = 0;
+            this._buyed_word = 0;
+            this._locked_word = 0;
+            this._unknown_word = 0;
+            for (let ch of this._chapters) {
+                if (ch._word_count === undefined) continue;
+                this._word_count += ch._word_count;
+                if (ch._is_locked) {
+                    this._locked_word += ch._word_count;
+                } else if (ch._is_vip === true) {
+                    this._buyed_word += ch._word_count;
+                } else if (ch._is_vip === false) {
+                    this._free_word += ch._word_count;
+                } else {
+                    this._unknown_word += ch._word_count;
+                }
+            }
+        }
     }
     toJson() {
         return { 'name': this._name, 'vip': this._is_vip, 'chapters': this._chapters };
@@ -329,6 +388,49 @@ class QDBookInfo {
             }
         }
         this._data['volumes'] = ivolumes.filter(vol => vol._chapters.length > 0);
+    }
+    /**
+     * @param {(key: [number, number, Date]) => Promise<QDChapterInfo | undefined>} get_chatper 
+     * @param {(eid: string) => Promise<[number, number, Date] | undefined>} get_latest_chapters_key_by_eid 
+     * @param {(id: number) => Promise<[number, number, Date] | undefined>} get_latest_chapters_key_by_chapterId
+     */
+    async update_catalog(get_chatper, get_latest_chapters_key_by_eid, get_latest_chapters_key_by_chapterId) {
+        let volumes = this.volumes();
+        if (volumes != undefined) {
+            for (let vol of volumes) {
+                for (let ch of vol._chapters) {
+                    if (!vol._is_vip && ch._is_vip === undefined) {
+                        ch._is_vip = false;
+                    }
+                    if (ch._is_locked && ch._is_vip === undefined) {
+                        ch._is_vip = true;
+                    }
+                    let id = ch.chapterId();
+                    if (id === undefined) {
+                        let eid = ch.encodedChapterId();
+                        if (eid !== undefined) {
+                            let key = await get_latest_chapters_key_by_eid(eid);
+                            if (key !== undefined) {
+                                let cc = await get_chatper(key);
+                                if (cc !== undefined) {
+                                    ch._id = cc.chapterId();
+                                    if (ch._is_vip === undefined) ch._is_vip = cc.vipStatus() ? true : false;
+                                }
+                            }
+                        }
+                    } else {
+                        if (ch._is_vip !== undefined) continue;
+                        let key = await get_latest_chapters_key_by_chapterId(id);
+                        if (key !== undefined) {
+                            let cc = await get_chatper(key);
+                            if (cc !== undefined) {
+                                ch._is_vip = cc.vipStatus() ? true : false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     toJson() {
         return stringify({ "g_data": this._g_data, "data": this._data }, QDBookInfo.get_json_map(), true, true);

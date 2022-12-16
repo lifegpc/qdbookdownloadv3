@@ -71,5 +71,12 @@
     "bookDesc": { "message": "Book description: " },
     "bookStatus": { "message": "Book status: " },
     "bookGenre": { "message": "Book genre:" },
-    "bookAuTags": { "message": "Book author defined tags:" }
+    "bookAuTags": { "message": "Book author defined tags:" },
+    "volumeCount": { "message": "Volume count: " },
+    "chapterCount": { "message": "Chapter count: " },
+    "buyStatus": { "message": "Purchase status:" },
+    "freeWordCount": { "message": "Free chapters' word count: " },
+    "buyedWordCount": { "message": "Purchased chapters' word count: " },
+    "lockedWordCount": { "message": "Locked chapters' word count: " },
+    "unknownWordCount": { "message": "VIP status unknown chapter's word count (may free chapter or purchased chapter): " }
 }
